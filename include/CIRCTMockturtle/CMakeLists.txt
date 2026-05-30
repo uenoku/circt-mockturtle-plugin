@@ -1,0 +1,3 @@
+set(LLVM_TARGET_DEFINITIONS CIRCTMockturtlePasses.td)
+mlir_tablegen(CIRCTMockturtlePasses.h.inc -gen-pass-decls)
+add_public_tablegen_target(CIRCTMockturtlePassesIncGen)
