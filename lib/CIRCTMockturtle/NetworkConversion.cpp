@@ -22,6 +22,8 @@
 #include "mockturtle/networks/aig.hpp"
 #include "mockturtle/networks/block.hpp"
 #include "mockturtle/networks/mig.hpp"
+#include "mockturtle/networks/xag.hpp"
+#include "mockturtle/networks/xmg.hpp"
 #include "mockturtle/views/cell_view.hpp"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/LogicalResult.h"
@@ -94,6 +96,42 @@ private:
 using AIGExporter =
     NetworkExporter<mockturtle::aig_network, synth::aig::AndInverterOp>;
 using MIGExporter = NetworkExporter<mockturtle::mig_network, synth::MajorityOp>;
+
+/// Converts mixed AND/XOR or MAJ/XOR MLIR regions to mockturtle networks.
+template <typename Ntk, typename PrimaryOp>
+class MixedXorNetworkExporter {
+public:
+  using signal = mockturtle::signal<Ntk>;
+  using node = typename Ntk::node;
+
+  MixedXorNetworkExporter(Block *block, Ntk &ntk, ExportedState &state)
+      : block(block), ntk(ntk), state(state) {}
+
+  LogicalResult run();
+
+private:
+  bool visit(Operation *op);
+  bool isSupported(Operation *op) {
+    return isa<PrimaryOp, synth::XorInverterOp>(op);
+  }
+  signal getOrCreateNode(Value v);
+  void registerOutput(Value value);
+  void mapValueToSignal(Value v, signal s) {
+    auto result = valueToNodeMap.insert({v, s});
+    (void)result;
+    assert(result.second && "Value already mapped to a signal");
+  }
+
+  Block *block;
+  Ntk &ntk;
+  ExportedState &state;
+  DenseMap<Value, signal> valueToNodeMap;
+};
+
+using XAGExporter =
+    MixedXorNetworkExporter<mockturtle::xag_network, synth::aig::AndInverterOp>;
+using XMGExporter =
+    MixedXorNetworkExporter<mockturtle::xmg_network, synth::MajorityOp>;
 
 //===----------------------------------------------------------------------===//
 // Network Exporter Implementation
@@ -171,6 +209,96 @@ NetworkExporter<Ntk, OpType>::getOrCreateNode(Value v) {
 
 template <typename Ntk, typename OpType>
 void NetworkExporter<Ntk, OpType>::registerOutput(Value value) {
+  auto node = getOrCreateNode(value);
+  auto po = ntk.create_po(node);
+  state.outputToValue[po] = value;
+}
+
+template <typename Ntk, typename PrimaryOp>
+LogicalResult MixedXorNetworkExporter<Ntk, PrimaryOp>::run() {
+  for (auto &op : block->getOperations()) {
+    if (visit(&op)) {
+      for (auto res : op.getResults()) {
+        if (llvm::any_of(res.getUsers(),
+                         [&](Operation *user) { return !isSupported(user); })) {
+          registerOutput(res);
+          break;
+        }
+      }
+    }
+  }
+  return success();
+}
+
+template <typename Ntk, typename PrimaryOp>
+bool MixedXorNetworkExporter<Ntk, PrimaryOp>::visit(Operation *op) {
+  SmallVector<signal, 4> operands;
+
+  if (auto primaryOp = dyn_cast<PrimaryOp>(op)) {
+    auto inverted = primaryOp.getInverted();
+    for (auto [operand, inv] : llvm::zip(primaryOp.getOperands(), inverted))
+      operands.push_back(getOrCreateNode(operand) ^ inv);
+
+    if constexpr (std::is_same_v<PrimaryOp, synth::aig::AndInverterOp>) {
+      if (operands.size() == 1) {
+        mapValueToSignal(primaryOp.getResult(), operands[0]);
+        return true;
+      }
+      assert(operands.size() == 2 && "XAG AND must have 2 operands");
+      mapValueToSignal(primaryOp.getResult(),
+                       ntk.create_and(operands[0], operands[1]));
+    } else if constexpr (std::is_same_v<PrimaryOp, synth::MajorityOp>) {
+      if (operands.size() == 1) {
+        mapValueToSignal(primaryOp.getResult(), operands[0]);
+        return true;
+      }
+      assert(operands.size() == 3 && "XMG Majority must have 3 operands");
+      mapValueToSignal(primaryOp.getResult(),
+                       ntk.create_maj(operands[0], operands[1], operands[2]));
+    }
+    return true;
+  }
+
+  if (auto xorOp = dyn_cast<synth::XorInverterOp>(op)) {
+    auto inverted = xorOp.getInverted();
+    for (auto [operand, inv] : llvm::zip(xorOp.getOperands(), inverted))
+      operands.push_back(getOrCreateNode(operand) ^ inv);
+
+    if (operands.size() == 1) {
+      mapValueToSignal(xorOp.getResult(), operands[0]);
+      return true;
+    }
+    auto result = operands[0];
+    for (auto operand : llvm::drop_begin(operands))
+      result = ntk.create_xor(result, operand);
+    mapValueToSignal(xorOp.getResult(), result);
+    return true;
+  }
+
+  return false;
+}
+
+template <typename Ntk, typename PrimaryOp>
+typename MixedXorNetworkExporter<Ntk, PrimaryOp>::signal
+MixedXorNetworkExporter<Ntk, PrimaryOp>::getOrCreateNode(Value v) {
+  auto it = valueToNodeMap.find(v);
+  if (it != valueToNodeMap.end())
+    return it->second;
+
+  if (auto *defOp = v.getDefiningOp()) {
+    if (visit(defOp))
+      return valueToNodeMap.at(v);
+  }
+
+  auto pi = ntk.create_pi();
+  auto piIndex = ntk.pi_index(pi.index);
+  state.indexToInput[piIndex] = v;
+  mapValueToSignal(v, pi);
+  return pi;
+}
+
+template <typename Ntk, typename PrimaryOp>
+void MixedXorNetworkExporter<Ntk, PrimaryOp>::registerOutput(Value value) {
   auto node = getOrCreateNode(value);
   auto po = ntk.create_po(node);
   state.outputToValue[po] = value;
@@ -333,6 +461,78 @@ using AIGNetworkConverter =
 using MIGNetworkConverter =
     StandardNetworkConverter<mockturtle::mig_network, synth::MajorityOp, 3>;
 
+/// Importer for XAG networks, preserving AND and XOR gates.
+class XAGNetworkConverter : public NetworkImporter<mockturtle::xag_network, 2> {
+public:
+  using NetworkImporter::NetworkImporter;
+  using node = typename mockturtle::xag_network::node;
+  using signal = typename mockturtle::xag_network::signal;
+
+protected:
+  Operation *lowerGate(node n) override {
+    auto children = getOperands(n);
+    SmallVector<bool> isComplement(children.size(), false);
+    if (ntk.is_and(n))
+      return builder.create<synth::aig::AndInverterOp>(builder.getUnknownLoc(),
+                                                       children, isComplement);
+    assert(ntk.is_xor(n) && "Expected an XAG AND or XOR node");
+    return builder.create<synth::XorInverterOp>(builder.getUnknownLoc(),
+                                                children, isComplement);
+  }
+
+  Value lowerComplement(Value v, bool isComplement) override {
+    if (!isComplement)
+      return v;
+    return builder.create<synth::XorInverterOp>(v.getLoc(), v, true);
+  }
+
+  size_t getPIIndex(node n) override { return ntk.pi_index(n); }
+
+  Value lowerSignal(signal s) override {
+    auto v = lowerNode(s.index);
+    if (auto val = dyn_cast<Value>(v))
+      return lowerComplement(val, s.complement);
+    auto *op = cast<Operation *>(v);
+    return lowerComplement(op->getResult(0), s.complement);
+  }
+};
+
+/// Importer for XMG networks, preserving MAJ and XOR gates.
+class XMGNetworkConverter : public NetworkImporter<mockturtle::xmg_network, 3> {
+public:
+  using NetworkImporter::NetworkImporter;
+  using node = typename mockturtle::xmg_network::node;
+  using signal = typename mockturtle::xmg_network::signal;
+
+protected:
+  Operation *lowerGate(node n) override {
+    auto children = getOperands(n);
+    SmallVector<bool> isComplement(children.size(), false);
+    if (ntk.is_maj(n))
+      return builder.create<synth::MajorityOp>(builder.getUnknownLoc(),
+                                               children, isComplement);
+    assert(ntk.is_xor3(n) && "Expected an XMG majority or XOR node");
+    return builder.create<synth::XorInverterOp>(builder.getUnknownLoc(),
+                                                children, isComplement);
+  }
+
+  Value lowerComplement(Value v, bool isComplement) override {
+    if (!isComplement)
+      return v;
+    return builder.create<synth::XorInverterOp>(v.getLoc(), v, true);
+  }
+
+  size_t getPIIndex(node n) override { return ntk.pi_index(n); }
+
+  Value lowerSignal(signal s) override {
+    auto v = lowerNode(s.index);
+    if (auto val = dyn_cast<Value>(v))
+      return lowerComplement(val, s.complement);
+    auto *op = cast<Operation *>(v);
+    return lowerComplement(op->getResult(0), s.complement);
+  }
+};
+
 //===----------------------------------------------------------------------===//
 // Cell View Converter
 //===----------------------------------------------------------------------===//
@@ -470,6 +670,44 @@ circt::mockturtle_plugin::mockturtle_integration::runMIGNetworkTransforms(
 
   OpBuilder builder = OpBuilder::atBlockBegin(block);
   MIGNetworkConverter converter(state, ntk, builder);
+  converter.run();
+
+  return success();
+}
+
+llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runXAGNetworkTransforms(
+    mlir::Block *block,
+    llvm::function_ref<llvm::LogicalResult(mockturtle::xag_network &)>
+        transform) {
+  ExportedState state;
+  mockturtle::xag_network ntk;
+  XAGExporter exporter(block, ntk, state);
+
+  if (failed(exporter.run()) || failed(transform(ntk)))
+    return failure();
+
+  OpBuilder builder = OpBuilder::atBlockBegin(block);
+  XAGNetworkConverter converter(state, ntk, builder);
+  converter.run();
+
+  return success();
+}
+
+llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runXMGNetworkTransforms(
+    mlir::Block *block,
+    llvm::function_ref<llvm::LogicalResult(mockturtle::xmg_network &)>
+        transform) {
+  ExportedState state;
+  mockturtle::xmg_network ntk;
+  XMGExporter exporter(block, ntk, state);
+
+  if (failed(exporter.run()) || failed(transform(ntk)))
+    return failure();
+
+  OpBuilder builder = OpBuilder::atBlockBegin(block);
+  XMGNetworkConverter converter(state, ntk, builder);
   converter.run();
 
   return success();

@@ -30,6 +30,8 @@ class SymbolTable;
 namespace mockturtle {
 class aig_network;
 class mig_network;
+class xag_network;
+class xmg_network;
 template <typename Ntk>
 class cell_view;
 class block_network;
@@ -132,6 +134,18 @@ llvm::LogicalResult runMIGNetworkTransforms(
     llvm::function_ref<llvm::LogicalResult(mockturtle::mig_network &)>
         transform);
 
+/// Apply a transformation to an XAG network extracted from the block.
+llvm::LogicalResult runXAGNetworkTransforms(
+    mlir::Block *block,
+    llvm::function_ref<llvm::LogicalResult(mockturtle::xag_network &)>
+        transform);
+
+/// Apply a transformation to an XMG network extracted from the block.
+llvm::LogicalResult runXMGNetworkTransforms(
+    mlir::Block *block,
+    llvm::function_ref<llvm::LogicalResult(mockturtle::xmg_network &)>
+        transform);
+
 /// Apply a transformation that maps a network to cell-view representation.
 /// This is used for technology mapping where the result is a set of
 /// instantiated cells.
@@ -172,20 +186,57 @@ runMIGAlgebraicRewriteDepth(mockturtle::mig_network &ntk,
 llvm::LogicalResult runSOPBalancing(Ntk ntk,
                                     const SOPBalancingOptions &options);
 
+/// Run ESOP balancing to optimize circuit structure
+llvm::LogicalResult runESOPBalancing(Ntk ntk,
+                                     const SOPBalancingOptions &options);
+
 /// Run AIG tree balancing.
 llvm::LogicalResult runAIGBalancing(mockturtle::aig_network &ntk,
+                                    const AIGBalancingOptions &options);
+
+/// Run XAG tree balancing.
+llvm::LogicalResult runXAGBalancing(mockturtle::xag_network &ntk,
                                     const AIGBalancingOptions &options);
 
 /// Run AIG-specific resubstitution.
 llvm::LogicalResult runAIGResubstitution(mockturtle::aig_network &ntk,
                                          const ResubstitutionOptions &options);
 
+/// Run window-based AIG-specific resubstitution.
+llvm::LogicalResult runAIGResubstitution2(mockturtle::aig_network &ntk,
+                                          const ResubstitutionOptions &options);
+
+/// Run XAG-specific resubstitution.
+llvm::LogicalResult runXAGResubstitution(mockturtle::xag_network &ntk,
+                                         const ResubstitutionOptions &options);
+
 /// Run MIG-specific resubstitution.
 llvm::LogicalResult runMIGResubstitution(mockturtle::mig_network &ntk,
                                          const ResubstitutionOptions &options);
 
+/// Run window-based MIG-specific resubstitution.
+llvm::LogicalResult runMIGResubstitution2(mockturtle::mig_network &ntk,
+                                          const ResubstitutionOptions &options);
+
+/// Run XMG-specific resubstitution.
+llvm::LogicalResult runXMGResubstitution(mockturtle::xmg_network &ntk,
+                                         const ResubstitutionOptions &options);
+
+/// Run XAG algebraic depth rewriting.
+llvm::LogicalResult
+runXAGAlgebraicRewriteDepth(mockturtle::xag_network &ntk,
+                            const MIGAlgebraicRewriteDepthOptions &options);
+
+/// Run XMG algebraic depth rewriting.
+llvm::LogicalResult
+runXMGAlgebraicRewriteDepth(mockturtle::xmg_network &ntk,
+                            const MIGAlgebraicRewriteDepthOptions &options);
+
 /// Run MIG inverter propagation.
 llvm::LogicalResult runMIGInverterPropagation(mockturtle::mig_network &ntk);
+
+/// Run MIG inverter optimization.
+llvm::LogicalResult runMIGInverterOptimization(mockturtle::mig_network &ntk);
 
 } // namespace mockturtle_integration
 } // namespace mockturtle_plugin

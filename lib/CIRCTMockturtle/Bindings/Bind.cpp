@@ -20,12 +20,20 @@
 #include "mockturtle/algorithms/functional_reduction.hpp"
 #include "mockturtle/algorithms/lut_mapper.hpp"
 #include "mockturtle/algorithms/mig_algebraic_rewriting.hpp"
+#include "mockturtle/algorithms/mig_inv_optimization.hpp"
 #include "mockturtle/algorithms/mig_inv_propagation.hpp"
 #include "mockturtle/algorithms/mig_resub.hpp"
 #include "mockturtle/algorithms/node_resynthesis/sop_factoring.hpp"
 #include "mockturtle/algorithms/refactoring.hpp"
+#include "mockturtle/algorithms/xag_algebraic_rewriting.hpp"
+#include "mockturtle/algorithms/xag_balancing.hpp"
+#include "mockturtle/algorithms/xag_resub.hpp"
+#include "mockturtle/algorithms/xmg_algebraic_rewriting.hpp"
+#include "mockturtle/algorithms/xmg_resub.hpp"
 #include "mockturtle/networks/aig.hpp"
 #include "mockturtle/networks/mig.hpp"
+#include "mockturtle/networks/xag.hpp"
+#include "mockturtle/networks/xmg.hpp"
 #include "mockturtle/views/depth_view.hpp"
 #include "mockturtle/views/fanout_view.hpp"
 #include "llvm/Support/LogicalResult.h"
@@ -66,6 +74,27 @@ getResubstitutionParams(const circt::mockturtle_plugin::mockturtle_integration::
   ps.odc_levels = options.odcLevels;
   ps.max_trials = options.maxTrials;
   ps.max_divisors_k = options.maxDivisorsK;
+  return ps;
+}
+
+static mockturtle::lut_map_params getLUTMapParams(
+    const circt::mockturtle_plugin::mockturtle_integration::SOPBalancingOptions
+        &options) {
+  mockturtle::lut_map_params ps;
+  ps.cut_enumeration_ps.cut_size = options.cutSize;
+  ps.cut_enumeration_ps.cut_limit = options.cutLimit;
+  ps.area_oriented_mapping = options.areaOrientedMapping;
+  ps.required_delay = options.requiredDelay;
+  ps.relax_required = options.relaxRequired;
+  ps.recompute_cuts = options.recomputeCuts;
+  ps.area_share_rounds = options.areaShareRounds;
+  ps.area_flow_rounds = options.areaFlowRounds;
+  ps.ela_rounds = options.elaRounds;
+  ps.edge_optimization = options.edgeOptimization;
+  ps.cut_expansion = options.cutExpansion;
+  ps.remove_dominated_cuts = options.removeDominatedCuts;
+  ps.cost_cache_vars = options.costCacheVars;
+  ps.verbose = options.verbose;
   return ps;
 }
 
@@ -142,24 +171,24 @@ llvm::LogicalResult
 circt::mockturtle_plugin::mockturtle_integration::runSOPBalancing(
     Ntk ntk, const SOPBalancingOptions &options) {
   return catchException([&]() {
-    mockturtle::lut_map_params ps;
-    ps.cut_enumeration_ps.cut_size = options.cutSize;
-    ps.cut_enumeration_ps.cut_limit = options.cutLimit;
-    ps.area_oriented_mapping = options.areaOrientedMapping;
-    ps.required_delay = options.requiredDelay;
-    ps.relax_required = options.relaxRequired;
-    ps.recompute_cuts = options.recomputeCuts;
-    ps.area_share_rounds = options.areaShareRounds;
-    ps.area_flow_rounds = options.areaFlowRounds;
-    ps.ela_rounds = options.elaRounds;
-    ps.edge_optimization = options.edgeOptimization;
-    ps.cut_expansion = options.cutExpansion;
-    ps.remove_dominated_cuts = options.removeDominatedCuts;
-    ps.cost_cache_vars = options.costCacheVars;
-    ps.verbose = options.verbose;
+    auto ps = getLUTMapParams(options);
     std::visit(
         [&](auto network) {
           *network = std::move(mockturtle::sop_balancing(*network, ps));
+        },
+        ntk);
+    return llvm::success();
+  });
+}
+
+llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runESOPBalancing(
+    Ntk ntk, const SOPBalancingOptions &options) {
+  return catchException([&]() {
+    auto ps = getLUTMapParams(options);
+    std::visit(
+        [&](auto network) {
+          *network = std::move(mockturtle::esop_balancing(*network, ps));
         },
         ntk);
     return llvm::success();
@@ -179,11 +208,47 @@ circt::mockturtle_plugin::mockturtle_integration::runAIGBalancing(
 }
 
 llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runXAGBalancing(
+    mockturtle::xag_network &ntk, const AIGBalancingOptions &options) {
+  return catchException([&]() {
+    mockturtle::xag_balancing_params ps;
+    ps.minimize_levels = options.minimizeLevels;
+    ps.fast_mode = options.fastMode;
+    mockturtle::xag_balance(ntk, ps);
+    return llvm::success();
+  });
+}
+
+llvm::LogicalResult
 circt::mockturtle_plugin::mockturtle_integration::runAIGResubstitution(
     mockturtle::aig_network &ntk, const ResubstitutionOptions &options) {
   return catchException([&]() {
     auto ps = getResubstitutionParams(options);
     mockturtle::aig_resubstitution(ntk, ps);
+    return llvm::success();
+  });
+}
+
+llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runAIGResubstitution2(
+    mockturtle::aig_network &ntk, const ResubstitutionOptions &options) {
+  return catchException([&]() {
+    auto ps = getResubstitutionParams(options);
+    mockturtle::depth_view<mockturtle::aig_network> depthView{ntk};
+    mockturtle::fanout_view<decltype(depthView)> fanoutView{depthView};
+    mockturtle::aig_resubstitution2(fanoutView, ps);
+    return llvm::success();
+  });
+}
+
+llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runXAGResubstitution(
+    mockturtle::xag_network &ntk, const ResubstitutionOptions &options) {
+  return catchException([&]() {
+    auto ps = getResubstitutionParams(options);
+    mockturtle::depth_view<mockturtle::xag_network> depthView{ntk};
+    mockturtle::fanout_view<decltype(depthView)> fanoutView{depthView};
+    mockturtle::xag_resubstitution(fanoutView, ps);
     return llvm::success();
   });
 }
@@ -201,10 +266,84 @@ circt::mockturtle_plugin::mockturtle_integration::runMIGResubstitution(
 }
 
 llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runMIGResubstitution2(
+    mockturtle::mig_network &ntk, const ResubstitutionOptions &options) {
+  return catchException([&]() {
+    auto ps = getResubstitutionParams(options);
+    mockturtle::depth_view<mockturtle::mig_network> depthView{ntk};
+    mockturtle::fanout_view<decltype(depthView)> fanoutView{depthView};
+    mockturtle::mig_resubstitution2(fanoutView, ps);
+    return llvm::success();
+  });
+}
+
+llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runXMGResubstitution(
+    mockturtle::xmg_network &ntk, const ResubstitutionOptions &options) {
+  return catchException([&]() {
+    auto ps = getResubstitutionParams(options);
+    mockturtle::xmg_resubstitution(ntk, ps);
+    return llvm::success();
+  });
+}
+
+llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runXAGAlgebraicRewriteDepth(
+    mockturtle::xag_network &ntk,
+    const MIGAlgebraicRewriteDepthOptions &options) {
+  return catchException([&]() {
+    mockturtle::xag_algebraic_depth_rewriting_params ps;
+    if (options.strategy == "aggressive")
+      ps.strategy =
+          mockturtle::xag_algebraic_depth_rewriting_params::aggressive;
+    else if (options.strategy == "selective")
+      ps.strategy = mockturtle::xag_algebraic_depth_rewriting_params::selective;
+    else
+      ps.strategy = mockturtle::xag_algebraic_depth_rewriting_params::dfs;
+    ps.overhead = options.overhead;
+    ps.allow_area_increase = options.allowAreaIncrease;
+    mockturtle::depth_view<mockturtle::xag_network> depthView{ntk};
+    mockturtle::xag_algebraic_depth_rewriting(depthView, ps);
+    return llvm::success();
+  });
+}
+
+llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runXMGAlgebraicRewriteDepth(
+    mockturtle::xmg_network &ntk,
+    const MIGAlgebraicRewriteDepthOptions &options) {
+  return catchException([&]() {
+    mockturtle::xmg_algebraic_depth_rewriting_params ps;
+    if (options.strategy == "aggressive")
+      ps.strategy =
+          mockturtle::xmg_algebraic_depth_rewriting_params::aggressive;
+    else if (options.strategy == "selective")
+      ps.strategy = mockturtle::xmg_algebraic_depth_rewriting_params::selective;
+    else
+      ps.strategy = mockturtle::xmg_algebraic_depth_rewriting_params::dfs;
+    ps.overhead = options.overhead;
+    ps.allow_area_increase = options.allowAreaIncrease;
+    mockturtle::depth_view<mockturtle::xmg_network> depthView{ntk};
+    mockturtle::xmg_algebraic_depth_rewriting(depthView, ps);
+    return llvm::success();
+  });
+}
+
+llvm::LogicalResult
 circt::mockturtle_plugin::mockturtle_integration::runMIGInverterPropagation(
     mockturtle::mig_network &ntk) {
   return catchException([&]() {
     mockturtle::mig_inv_propagation(ntk);
+    return llvm::success();
+  });
+}
+
+llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runMIGInverterOptimization(
+    mockturtle::mig_network &ntk) {
+  return catchException([&]() {
+    mockturtle::fanout_view<mockturtle::mig_network> fanoutView{ntk};
+    mockturtle::mig_inv_optimization(fanoutView);
     return llvm::success();
   });
 }

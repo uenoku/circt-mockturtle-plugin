@@ -98,9 +98,36 @@ def MockturtleMIGAlgebraicRewriteDepth
   ];
 }
 
-def MockturtleSOPBalancing
-    : MockturtlePassBase<"synth-mockturtle-sop-balancing", "hw::HWModuleOp"> {
-  let summary = "Run mockturtle SOP balancing";
+def MockturtleXAGAlgebraicRewriteDepth
+    : MockturtlePassBase<"synth-mockturtle-xag-algebraic-rewrite-depth",
+                         "hw::HWModuleOp"> {
+  let summary = "Run mockturtle XAG algebraic depth rewriting";
+  let options = [
+    Option<"strategy", "strategy", "std::string", "\"dfs\"",
+           "Rewrite strategy: dfs, aggressive, or selective">,
+    Option<"overhead", "overhead", "double", "2.0",
+           "Overhead factor used by aggressive rewriting">,
+    Option<"allowAreaIncrease", "allow-area-increase", "bool", "true",
+           "Allow area increase while optimizing depth">
+  ];
+}
+
+def MockturtleXMGAlgebraicRewriteDepth
+    : MockturtlePassBase<"synth-mockturtle-xmg-algebraic-rewrite-depth",
+                         "hw::HWModuleOp"> {
+  let summary = "Run mockturtle XMG algebraic depth rewriting";
+  let options = [
+    Option<"strategy", "strategy", "std::string", "\"dfs\"",
+           "Rewrite strategy: dfs, aggressive, or selective">,
+    Option<"overhead", "overhead", "double", "2.0",
+           "Overhead factor used by aggressive rewriting">,
+    Option<"allowAreaIncrease", "allow-area-increase", "bool", "true",
+           "Allow area increase while optimizing depth">
+  ];
+}
+
+class MockturtleLUTBalancingBase<string name>
+    : MockturtlePassBase<name, "hw::HWModuleOp"> {
   let options = [
     Option<"cutSize", "cut-size", "unsigned", "6",
            "Cut size for LUT mapping">,
@@ -132,12 +159,33 @@ def MockturtleSOPBalancing
   ];
 }
 
+def MockturtleSOPBalancing
+    : MockturtleLUTBalancingBase<"synth-mockturtle-sop-balancing"> {
+  let summary = "Run mockturtle SOP balancing";
+}
+
+def MockturtleESOPBalancing
+    : MockturtleLUTBalancingBase<"synth-mockturtle-esop-balancing"> {
+  let summary = "Run mockturtle ESOP balancing";
+}
+
 def MockturtleAIGBalancing
     : MockturtlePassBase<"synth-mockturtle-aig-balancing", "hw::HWModuleOp"> {
   let summary = "Run mockturtle AIG tree balancing";
   let options = [
     Option<"minimizeLevels", "minimize-levels", "bool", "true",
            "Minimize AIG levels">,
+    Option<"fastMode", "fast-mode", "bool", "true",
+           "Use faster balancing mode">
+  ];
+}
+
+def MockturtleXAGBalancing
+    : MockturtlePassBase<"synth-mockturtle-xag-balancing", "hw::HWModuleOp"> {
+  let summary = "Run mockturtle XAG tree balancing";
+  let options = [
+    Option<"minimizeLevels", "minimize-levels", "bool", "true",
+           "Minimize XAG levels">,
     Option<"fastMode", "fast-mode", "bool", "true",
            "Use faster balancing mode">
   ];
@@ -190,15 +238,41 @@ def MockturtleAIGResubstitution
   let summary = "Run mockturtle AIG-specific resubstitution";
 }
 
+def MockturtleAIGResubstitution2
+    : MockturtleResubstitutionBase<"synth-mockturtle-aig-resubstitution2"> {
+  let summary = "Run mockturtle window-based AIG-specific resubstitution";
+}
+
+def MockturtleXAGResubstitution
+    : MockturtleResubstitutionBase<"synth-mockturtle-xag-resubstitution"> {
+  let summary = "Run mockturtle XAG-specific resubstitution";
+}
+
 def MockturtleMIGResubstitution
     : MockturtleResubstitutionBase<"synth-mockturtle-mig-resubstitution"> {
   let summary = "Run mockturtle MIG-specific resubstitution";
+}
+
+def MockturtleMIGResubstitution2
+    : MockturtleResubstitutionBase<"synth-mockturtle-mig-resubstitution2"> {
+  let summary = "Run mockturtle window-based MIG-specific resubstitution";
+}
+
+def MockturtleXMGResubstitution
+    : MockturtleResubstitutionBase<"synth-mockturtle-xmg-resubstitution"> {
+  let summary = "Run mockturtle XMG-specific resubstitution";
 }
 
 def MockturtleMIGInverterPropagation
     : MockturtlePassBase<"synth-mockturtle-mig-inv-propagation",
                          "hw::HWModuleOp"> {
   let summary = "Run mockturtle MIG inverter propagation";
+}
+
+def MockturtleMIGInverterOptimization
+    : MockturtlePassBase<"synth-mockturtle-mig-inv-optimization",
+                         "hw::HWModuleOp"> {
+  let summary = "Run mockturtle MIG inverter optimization";
 }
 
 def MockturtleEmap
