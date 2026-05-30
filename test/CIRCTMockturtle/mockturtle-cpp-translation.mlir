@@ -1,4 +1,8 @@
 // RUN: circt-mockturtle-translate --mockturtle-mlir-to-cpp %s | FileCheck %s
+// RUN: rm -rf %t && circt-mockturtle-translate --mockturtle-mlir-to-cpp --mockturtle-repro-dir=%t %s | FileCheck %s --check-prefix=REPRO-MSG
+// RUN: FileCheck %s --check-prefix=CPP --input-file=%t/repro.cpp
+// RUN: FileCheck %s --check-prefix=CMAKE --input-file=%t/CMakeLists.txt
+// RUN: FileCheck %s --check-prefix=README --input-file=%t/README.md
 
 // CHECK: #include <mockturtle/networks/aig.hpp>
 // CHECK: #include <mockturtle/networks/xag.hpp>
@@ -20,6 +24,22 @@
 // CHECK-LABEL: mockturtle::xmg_network build_xmg()
 // CHECK: ntk.create_maj
 // CHECK: ntk.create_xor
+
+// REPRO-MSG: wrote mockturtle repro to
+
+// CPP: #include <mockturtle/networks/xag.hpp>
+// CPP-LABEL: mockturtle::xag_network build_xag()
+// CPP: ntk.create_po
+
+// CMAKE: FetchContent_Declare(
+// CMAKE: mockturtle
+// CMAKE: GIT_REPOSITORY https://github.com/lsils/mockturtle.git
+// CMAKE: GIT_TAG ee3df62e5a3afbf2c05bc6b9a924b42c6bf685d7
+// CMAKE: add_executable(repro repro.cpp)
+// CMAKE: target_link_libraries(repro PRIVATE libabcesop libabcsat)
+
+// README: cmake -S . -B build
+// README: FETCHCONTENT_SOURCE_DIR_MOCKTURTLE
 
 hw.module @xag(in %a : i1, in %b : i1, in %c : i1, out out : i1) {
   %0 = synth.aig.and_inv %a, %b : i1

@@ -20,6 +20,9 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringSet.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 
 #include <cctype>
@@ -29,6 +32,12 @@ using namespace circt::mockturtle_plugin;
 using namespace mlir;
 
 namespace {
+
+static llvm::cl::opt<std::string> reproDir(
+    "mockturtle-repro-dir",
+    llvm::cl::desc("Write a standalone mockturtle C++ repro project to this "
+                   "directory instead of writing C++ to stdout"),
+    llvm::cl::init(""));
 
 enum class NetworkKind { AIG, XAG, MIG, XMG };
 
@@ -610,6 +619,155 @@ LogicalResult CppEmitter::emit(ModuleOp module) {
   return success();
 }
 
+std::string getReproCMakeLists() {
+  return R"cmake(cmake_minimum_required(VERSION 3.20)
+project(mockturtle_repro LANGUAGES C CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(FetchContent)
+set(FETCHCONTENT_QUIET OFF)
+
+FetchContent_Declare(
+  mockturtle
+  GIT_REPOSITORY https://github.com/lsils/mockturtle.git
+  GIT_TAG ee3df62e5a3afbf2c05bc6b9a924b42c6bf685d7
+  GIT_SHALLOW FALSE
+)
+
+FetchContent_GetProperties(mockturtle)
+if(NOT mockturtle_POPULATED)
+  FetchContent_Populate(mockturtle)
+endif()
+
+set(STATIC_LIBABC ON CACHE BOOL "Build mockturtle ABC support as static libs" FORCE)
+if(NOT TARGET libabcesop)
+  add_subdirectory("${mockturtle_SOURCE_DIR}/lib/abcesop"
+                   "${CMAKE_BINARY_DIR}/mockturtle-abcesop"
+                   EXCLUDE_FROM_ALL)
+endif()
+if(NOT TARGET libabcsat)
+  add_subdirectory("${mockturtle_SOURCE_DIR}/lib/abcsat"
+                   "${CMAKE_BINARY_DIR}/mockturtle-abcsat"
+                   EXCLUDE_FROM_ALL)
+endif()
+
+foreach(dep libabcesop libabcsat)
+  if(TARGET ${dep})
+    target_compile_definitions(${dep} PRIVATE
+      FMT_HEADER_ONLY
+      DISABLE_NAUTY
+      LIN64
+      ABC_NAMESPACE=pabc
+      ABC_NO_USE_READLINE
+    )
+    target_compile_options(${dep} PRIVATE
+      $<$<COMPILE_LANGUAGE:CXX>:-fexceptions -frtti -w>
+    )
+  endif()
+endforeach()
+
+add_executable(repro repro.cpp)
+target_compile_definitions(repro PRIVATE
+  FMT_HEADER_ONLY
+  DISABLE_NAUTY
+  LIN64
+  ABC_NAMESPACE=pabc
+  ABC_NO_USE_READLINE
+)
+target_include_directories(repro SYSTEM PRIVATE
+  "${mockturtle_SOURCE_DIR}/include"
+  "${mockturtle_SOURCE_DIR}/lib/abcesop"
+  "${mockturtle_SOURCE_DIR}/lib/abcsat"
+  "${mockturtle_SOURCE_DIR}/lib/bill"
+  "${mockturtle_SOURCE_DIR}/lib/fmt"
+  "${mockturtle_SOURCE_DIR}/lib/json"
+  "${mockturtle_SOURCE_DIR}/lib/kitty"
+  "${mockturtle_SOURCE_DIR}/lib/lorina"
+  "${mockturtle_SOURCE_DIR}/lib/parallel_hashmap"
+  "${mockturtle_SOURCE_DIR}/lib/percy"
+  "${mockturtle_SOURCE_DIR}/lib/rang"
+)
+target_link_libraries(repro PRIVATE libabcesop libabcsat)
+)cmake";
+}
+
+std::string getReproReadme() {
+  return R"md(# mockturtle Reproducer
+
+This directory is a standalone CMake reproducer generated from CIRCT MLIR.
+It fetches mockturtle with CMake `FetchContent` and builds `repro.cpp`.
+
+Build and run:
+
+```sh
+cmake -S . -B build
+cmake --build build
+./build/repro
+```
+
+To use a local mockturtle checkout instead of fetching:
+
+```sh
+cmake -S . -B build -DFETCHCONTENT_SOURCE_DIR_MOCKTURTLE=/path/to/mockturtle
+cmake --build build
+./build/repro
+```
+
+For a preprocessed source file, configure with compile commands enabled and
+rerun the compile line with `-E -P`.
+)md";
+}
+
+LogicalResult writeReproFile(Location loc, StringRef path, StringRef contents) {
+  std::error_code ec;
+  llvm::raw_fd_ostream file(path, ec, llvm::sys::fs::OF_Text);
+  if (ec)
+    return emitError(loc) << "failed to open '" << path
+                          << "': " << ec.message();
+
+  file << contents;
+  file.close();
+  if (file.has_error()) {
+    std::error_code writeEC = file.error();
+    file.clear_error();
+    return emitError(loc) << "failed to write '" << path
+                          << "': " << writeEC.message();
+  }
+  return success();
+}
+
+LogicalResult writeReproBundle(ModuleOp module, raw_ostream &output) {
+  if (std::error_code ec = llvm::sys::fs::create_directories(reproDir))
+    return module.emitError("failed to create repro directory '")
+           << reproDir << "': " << ec.message();
+
+  std::string cpp;
+  llvm::raw_string_ostream cppOS(cpp);
+  if (failed(CppEmitter(cppOS).emit(module)))
+    return failure();
+  cppOS.flush();
+
+  llvm::SmallString<128> reproCpp(reproDir);
+  llvm::sys::path::append(reproCpp, "repro.cpp");
+  if (failed(writeReproFile(module.getLoc(), reproCpp, cpp)))
+    return failure();
+
+  llvm::SmallString<128> cmakeLists(reproDir);
+  llvm::sys::path::append(cmakeLists, "CMakeLists.txt");
+  if (failed(writeReproFile(module.getLoc(), cmakeLists, getReproCMakeLists())))
+    return failure();
+
+  llvm::SmallString<128> readme(reproDir);
+  llvm::sys::path::append(readme, "README.md");
+  if (failed(writeReproFile(module.getLoc(), readme, getReproReadme())))
+    return failure();
+
+  output << "wrote mockturtle repro to " << reproDir << "\n";
+  return success();
+}
+
 } // namespace
 
 void circt::mockturtle_plugin::registerTranslations() {
@@ -617,6 +775,8 @@ void circt::mockturtle_plugin::registerTranslations() {
       "mockturtle-mlir-to-cpp",
       "translate CIRCT HW/Synth MLIR to executable mockturtle C++",
       [](ModuleOp module, raw_ostream &output) {
+        if (!reproDir.empty())
+          return writeReproBundle(module, output);
         return CppEmitter(output).emit(module);
       },
       [](DialectRegistry &registry) {
