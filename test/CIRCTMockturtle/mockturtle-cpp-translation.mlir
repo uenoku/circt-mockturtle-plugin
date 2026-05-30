@@ -33,7 +33,7 @@
 
 // CMAKE: FetchContent_Declare(
 // CMAKE: mockturtle
-// CMAKE: GIT_REPOSITORY https://github.com/lsils/mockturtle.git
+// CMAKE: GIT_REPOSITORY https://github.com/uenoku/mockturtle.git
 // CMAKE: GIT_TAG ee3df62e5a3afbf2c05bc6b9a924b42c6bf685d7
 // CMAKE: add_executable(repro repro.cpp)
 // CMAKE: target_link_libraries(repro PRIVATE libabcesop libabcsat)

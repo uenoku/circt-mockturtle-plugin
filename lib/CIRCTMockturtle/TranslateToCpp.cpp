@@ -631,7 +631,7 @@ set(FETCHCONTENT_QUIET OFF)
 
 FetchContent_Declare(
   mockturtle
-  GIT_REPOSITORY https://github.com/lsils/mockturtle.git
+  GIT_REPOSITORY https://github.com/uenoku/mockturtle.git
   GIT_TAG ee3df62e5a3afbf2c05bc6b9a924b42c6bf685d7
   GIT_SHALLOW FALSE
 )
