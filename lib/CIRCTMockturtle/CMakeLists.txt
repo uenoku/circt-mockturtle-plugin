@@ -1,5 +1,9 @@
 add_mlir_library(CIRCTMockturtle
   CIRCTMockturtlePasses.cpp
+  Emap.cpp
+  MockturtlePasses.cpp
+  NetworkConversion.cpp
+  Bindings/Bind.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${CIRCT_MOCKTURTLE_SOURCE_DIR}/include/CIRCTMockturtle
@@ -8,12 +12,22 @@ add_mlir_library(CIRCTMockturtle
   CIRCTMockturtlePassesIncGen
 
   LINK_LIBS PUBLIC
+  CIRCTComb
   CIRCTHW
   CIRCTSynth
   MLIRIR
   MLIRPass
   MLIRSupport
+  MLIRTransforms
+  libabcesop
+  libabcsat
   mockturtle_headers
 )
 
 target_compile_options(CIRCTMockturtle PRIVATE -Wno-unknown-pragmas)
+if(TARGET obj.CIRCTMockturtle)
+  target_compile_options(obj.CIRCTMockturtle PRIVATE -Wno-unknown-pragmas)
+endif()
+set_source_files_properties(Bindings/Bind.cpp PROPERTIES
+  COMPILE_FLAGS "-fexceptions -frtti -Wno-unknown-pragmas"
+)

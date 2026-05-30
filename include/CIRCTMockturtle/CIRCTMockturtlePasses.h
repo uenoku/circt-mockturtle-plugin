@@ -9,6 +9,9 @@
 #ifndef CIRCT_MOCKTURTLE_CIRCTMOCKTURTLEPASSES_H
 #define CIRCT_MOCKTURTLE_CIRCTMOCKTURTLEPASSES_H
 
+#include "circt/Dialect/Comb/CombDialect.h"
+#include "circt/Dialect/HW/HWDialect.h"
+#include "circt/Dialect/Synth/SynthDialect.h"
 #include "mlir/Pass/Pass.h"
 
 namespace circt {

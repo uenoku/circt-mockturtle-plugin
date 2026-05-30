@@ -40,11 +40,54 @@ if(NOT EXISTS "${MOCKTURTLE_SOURCE_DIR}/include/mockturtle/mockturtle.hpp")
 endif()
 
 add_library(mockturtle_headers INTERFACE)
+add_definitions(
+  -DFMT_HEADER_ONLY
+  -DDISABLE_NAUTY
+  -DLIN64
+  -DABC_NAMESPACE=pabc
+  -DABC_NO_USE_READLINE
+)
+target_compile_definitions(mockturtle_headers INTERFACE
+  FMT_HEADER_ONLY
+  DISABLE_NAUTY
+  LIN64
+  ABC_NAMESPACE=pabc
+  ABC_NO_USE_READLINE
+)
 target_include_directories(mockturtle_headers SYSTEM INTERFACE
   "${MOCKTURTLE_SOURCE_DIR}/include"
+  "${MOCKTURTLE_SOURCE_DIR}/lib/abcesop"
+  "${MOCKTURTLE_SOURCE_DIR}/lib/abcsat"
+  "${MOCKTURTLE_SOURCE_DIR}/lib/bill"
+  "${MOCKTURTLE_SOURCE_DIR}/lib/fmt"
+  "${MOCKTURTLE_SOURCE_DIR}/lib/json"
   "${MOCKTURTLE_SOURCE_DIR}/lib/kitty"
+  "${MOCKTURTLE_SOURCE_DIR}/lib/lorina"
   "${MOCKTURTLE_SOURCE_DIR}/lib/parallel_hashmap"
+  "${MOCKTURTLE_SOURCE_DIR}/lib/percy"
+  "${MOCKTURTLE_SOURCE_DIR}/lib/rang"
 )
+
+set(STATIC_LIBABC ON CACHE BOOL "Build mockturtle ABC support as static libs"
+    FORCE)
+if(NOT TARGET libabcesop)
+  add_subdirectory("${MOCKTURTLE_SOURCE_DIR}/lib/abcesop"
+                   "${CMAKE_BINARY_DIR}/mockturtle-abcesop"
+                   EXCLUDE_FROM_ALL)
+endif()
+if(NOT TARGET libabcsat)
+  add_subdirectory("${MOCKTURTLE_SOURCE_DIR}/lib/abcsat"
+                   "${CMAKE_BINARY_DIR}/mockturtle-abcsat"
+                   EXCLUDE_FROM_ALL)
+endif()
+foreach(dep libabcesop libabcsat)
+  if(TARGET ${dep})
+    set_target_properties(${dep} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_compile_options(${dep} PRIVATE
+      $<$<COMPILE_LANGUAGE:CXX>:-fexceptions -frtti -w>
+    )
+  endif()
+endforeach()
 
 include_directories(${LLVM_INCLUDE_DIRS})
 include_directories(${MLIR_INCLUDE_DIRS})
