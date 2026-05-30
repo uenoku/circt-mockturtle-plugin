@@ -32,4 +32,5 @@ if(TARGET obj.CIRCTMockturtle)
 endif()
 set_source_files_properties(Bindings/Bind.cpp PROPERTIES
   COMPILE_FLAGS "-fexceptions -frtti -Wno-unknown-pragmas"
+  SKIP_PRECOMPILE_HEADERS ON
 )

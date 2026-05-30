@@ -88,7 +88,6 @@ target_include_directories(mockturtle_headers SYSTEM INTERFACE
   "${MOCKTURTLE_SOURCE_DIR}/lib/percy"
   "${MOCKTURTLE_SOURCE_DIR}/lib/rang"
 )
-
 set(STATIC_LIBABC ON CACHE BOOL "Build mockturtle ABC support as static libs"
     FORCE)
 if(NOT TARGET libabcesop)
@@ -112,7 +111,10 @@ endforeach()
 
 include_directories(${LLVM_INCLUDE_DIRS})
 include_directories(${MLIR_INCLUDE_DIRS})
+include_directories(${LLVM_MAIN_SRC_DIR}/../mlir/include)
+include_directories(${CMAKE_BINARY_DIR}/tools/mlir/include)
 include_directories(${CIRCT_INCLUDE_DIRS})
+include_directories(${LLVM_EXTERNAL_CIRCT_SOURCE_DIR}/include)
 include_directories(${CIRCT_MOCKTURTLE_SOURCE_DIR}/include)
 include_directories(${CIRCT_MOCKTURTLE_BINARY_DIR}/include)
 link_directories(${LLVM_BUILD_LIBRARY_DIR})
@@ -128,7 +130,7 @@ add_subdirectory(circt-mockturtle-opt)
 add_subdirectory(circt-mockturtle-translate)
 
 set(CIRCT_MOCKTURTLE_HAS_PLUGIN 0)
-if(NOT WIN32 AND TARGET circt-opt)
+if(NOT WIN32 AND NOT EMSCRIPTEN AND TARGET circt-opt)
   add_subdirectory(circt-mockturtle-plugin)
   set(CIRCT_MOCKTURTLE_HAS_PLUGIN 1)
 endif()
