@@ -17,6 +17,7 @@ target_link_libraries(circt-mockturtle-opt
   CIRCTComb
   CIRCTHW
   CIRCTSynth
+  CIRCTSynthTransforms
   MLIRIR
   MLIROptLib
   MLIRParser

@@ -10,6 +10,7 @@
 #include "circt/Dialect/Comb/CombDialect.h"
 #include "circt/Dialect/HW/HWDialect.h"
 #include "circt/Dialect/Synth/SynthDialect.h"
+#include "circt/Dialect/Synth/Transforms/SynthPasses.h"
 #include "circt/Support/Version.h"
 #include "mlir/Pass/PassRegistry.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
@@ -25,6 +26,7 @@ int main(int argc, char **argv) {
   registry.insert<circt::synth::SynthDialect>();
 
   circt::mockturtle_plugin::registerPasses();
+  circt::synth::registerPasses();
   mlir::registerCanonicalizerPass();
   mlir::registerCSEPass();
   llvm::cl::AddExtraVersionPrinter(
