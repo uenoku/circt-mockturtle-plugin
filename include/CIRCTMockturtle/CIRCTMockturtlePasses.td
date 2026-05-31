@@ -191,6 +191,32 @@ def MockturtleXAGBalancing
   ];
 }
 
+def MockturtleAIGToXAG
+    : MockturtlePassBase<"synth-mockturtle-aig-to-xag", "hw::HWModuleOp"> {
+  let summary = "Convert a mockturtle AIG network to XAG";
+  let options = [
+    Option<"verbose", "verbose", "bool", "false", "Print mockturtle stats">
+  ];
+}
+
+def MockturtleAIGToMIG
+    : MockturtlePassBase<"synth-mockturtle-aig-to-mig", "hw::HWModuleOp"> {
+  let summary = "Convert a mockturtle AIG network to MIG";
+  let options = [
+    Option<"useMultiple", "use-multiple", "bool", "false",
+           "Try multiple MIG structures for each function">,
+    Option<"verbose", "verbose", "bool", "false", "Print mockturtle stats">
+  ];
+}
+
+def MockturtleAIGToXMG
+    : MockturtlePassBase<"synth-mockturtle-aig-to-xmg", "hw::HWModuleOp"> {
+  let summary = "Convert a mockturtle AIG network to XMG";
+  let options = [
+    Option<"verbose", "verbose", "bool", "false", "Print mockturtle stats">
+  ];
+}
+
 class MockturtleResubstitutionBase<string name>
     : MockturtlePassBase<name, "hw::HWModuleOp"> {
   let options = [

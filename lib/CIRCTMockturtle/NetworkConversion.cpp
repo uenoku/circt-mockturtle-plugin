@@ -19,6 +19,10 @@
 #include "mlir/IR/SymbolTable.h"
 #include "mlir/Support/WalkResult.h"
 #include "mlir/Transforms/RegionUtils.h"
+#include "mockturtle/algorithms/node_resynthesis.hpp"
+#include "mockturtle/algorithms/node_resynthesis/mig_npn.hpp"
+#include "mockturtle/algorithms/node_resynthesis/xag_npn.hpp"
+#include "mockturtle/algorithms/node_resynthesis/xmg_npn.hpp"
 #include "mockturtle/networks/aig.hpp"
 #include "mockturtle/networks/block.hpp"
 #include "mockturtle/networks/mig.hpp"
@@ -27,6 +31,7 @@
 #include "mockturtle/views/cell_view.hpp"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/LogicalResult.h"
+#include <utility>
 
 #define DEBUG_TYPE "mockturtle-network-conversion"
 
@@ -610,6 +615,29 @@ private:
   DenseMap<node, size_t> nodeToPIIndex;
 };
 
+template <typename DestNtk, typename Converter, typename ResynthesisFn>
+llvm::LogicalResult runAIGNetworkConversion(Block *block,
+                                            ResynthesisFn &&resynthesisFn,
+                                            bool verbose) {
+  ExportedState state;
+  mockturtle::aig_network aig;
+  AIGExporter exporter(block, aig, state);
+
+  if (failed(exporter.run()))
+    return failure();
+
+  mockturtle::node_resynthesis_params params;
+  params.verbose = verbose;
+  DestNtk dest = mockturtle::node_resynthesis<DestNtk>(
+      aig, std::forward<ResynthesisFn>(resynthesisFn), params);
+
+  OpBuilder builder = OpBuilder::atBlockBegin(block);
+  Converter converter(state, dest, builder);
+  converter.run();
+
+  return success();
+}
+
 } // anonymous namespace
 
 //===----------------------------------------------------------------------===//
@@ -723,6 +751,35 @@ circt::mockturtle_plugin::mockturtle_integration::runXMGNetworkTransforms(
   converter.run();
 
   return success();
+}
+
+llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runAIGToXAGNetworkConversion(
+    mlir::Block *block, const AIGToGraphConversionOptions &options) {
+  mockturtle::xag_npn_resynthesis_params params;
+  params.verbose = options.verbose;
+  mockturtle::xag_npn_resynthesis<mockturtle::xag_network,
+                                  mockturtle::xag_network,
+                                  mockturtle::xag_npn_db_kind::xag_complete>
+      resynthesis(params);
+  return runAIGNetworkConversion<mockturtle::xag_network, XAGNetworkConverter>(
+      block, resynthesis, options.verbose);
+}
+
+llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runAIGToMIGNetworkConversion(
+    mlir::Block *block, const AIGToGraphConversionOptions &options) {
+  mockturtle::mig_npn_resynthesis resynthesis(options.useMultiple);
+  return runAIGNetworkConversion<mockturtle::mig_network, MIGNetworkConverter>(
+      block, resynthesis, options.verbose);
+}
+
+llvm::LogicalResult
+circt::mockturtle_plugin::mockturtle_integration::runAIGToXMGNetworkConversion(
+    mlir::Block *block, const AIGToGraphConversionOptions &options) {
+  mockturtle::xmg_npn_resynthesis resynthesis;
+  return runAIGNetworkConversion<mockturtle::xmg_network, XMGNetworkConverter>(
+      block, resynthesis, options.verbose);
 }
 
 /// Auto-detect network type (AIG/MIG) and apply transformations.

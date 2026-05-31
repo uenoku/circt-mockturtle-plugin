@@ -116,6 +116,11 @@ struct ResubstitutionOptions {
   uint32_t maxDivisorsK = 50;
 };
 
+struct AIGToGraphConversionOptions {
+  bool useMultiple = false;
+  bool verbose = false;
+};
+
 //===----------------------------------------------------------------------===//
 // High-level transformation interfaces
 //===----------------------------------------------------------------------===//
@@ -145,6 +150,24 @@ llvm::LogicalResult runXMGNetworkTransforms(
     mlir::Block *block,
     llvm::function_ref<llvm::LogicalResult(mockturtle::xmg_network &)>
         transform);
+
+/// Convert an AIG network extracted from the block to XAG using mockturtle node
+/// resynthesis.
+llvm::LogicalResult
+runAIGToXAGNetworkConversion(mlir::Block *block,
+                             const AIGToGraphConversionOptions &options);
+
+/// Convert an AIG network extracted from the block to MIG using mockturtle node
+/// resynthesis.
+llvm::LogicalResult
+runAIGToMIGNetworkConversion(mlir::Block *block,
+                             const AIGToGraphConversionOptions &options);
+
+/// Convert an AIG network extracted from the block to XMG using mockturtle node
+/// resynthesis.
+llvm::LogicalResult
+runAIGToXMGNetworkConversion(mlir::Block *block,
+                             const AIGToGraphConversionOptions &options);
 
 /// Apply a transformation that maps a network to cell-view representation.
 /// This is used for technology mapping where the result is a set of

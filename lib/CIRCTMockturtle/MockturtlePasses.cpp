@@ -33,6 +33,9 @@ namespace mockturtle_plugin {
 #define GEN_PASS_DEF_MOCKTURTLEXAGBALANCING
 #define GEN_PASS_DEF_MOCKTURTLEAIGRESUBSTITUTION
 #define GEN_PASS_DEF_MOCKTURTLEAIGRESUBSTITUTION2
+#define GEN_PASS_DEF_MOCKTURTLEAIGTOXAG
+#define GEN_PASS_DEF_MOCKTURTLEAIGTOMIG
+#define GEN_PASS_DEF_MOCKTURTLEAIGTOXMG
 #define GEN_PASS_DEF_MOCKTURTLEXAGRESUBSTITUTION
 #define GEN_PASS_DEF_MOCKTURTLEMIGRESUBSTITUTION
 #define GEN_PASS_DEF_MOCKTURTLEMIGRESUBSTITUTION2
@@ -350,6 +353,64 @@ struct MockturtleXAGBalancingPass
                                        [&](mockturtle::xag_network &ntk) {
                                          return runXAGBalancing(ntk, options);
                                        })))
+      signalPassFailure();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// AIG to XAG Conversion Pass
+//===----------------------------------------------------------------------===//
+struct MockturtleAIGToXAGPass
+    : public impl::MockturtleAIGToXAGBase<MockturtleAIGToXAGPass> {
+  using impl::MockturtleAIGToXAGBase<
+      MockturtleAIGToXAGPass>::MockturtleAIGToXAGBase;
+
+  void runOnOperation() override {
+    auto module = getOperation();
+    LLVM_DEBUG(llvm::dbgs() << "Running Mockturtle AIG to XAG pass on module: "
+                            << module.getModuleName() << "\n");
+    AIGToGraphConversionOptions options;
+    options.verbose = verbose;
+    if (failed(runAIGToXAGNetworkConversion(module.getBodyBlock(), options)))
+      signalPassFailure();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// AIG to MIG Conversion Pass
+//===----------------------------------------------------------------------===//
+struct MockturtleAIGToMIGPass
+    : public impl::MockturtleAIGToMIGBase<MockturtleAIGToMIGPass> {
+  using impl::MockturtleAIGToMIGBase<
+      MockturtleAIGToMIGPass>::MockturtleAIGToMIGBase;
+
+  void runOnOperation() override {
+    auto module = getOperation();
+    LLVM_DEBUG(llvm::dbgs() << "Running Mockturtle AIG to MIG pass on module: "
+                            << module.getModuleName() << "\n");
+    AIGToGraphConversionOptions options;
+    options.useMultiple = useMultiple;
+    options.verbose = verbose;
+    if (failed(runAIGToMIGNetworkConversion(module.getBodyBlock(), options)))
+      signalPassFailure();
+  }
+};
+
+//===----------------------------------------------------------------------===//
+// AIG to XMG Conversion Pass
+//===----------------------------------------------------------------------===//
+struct MockturtleAIGToXMGPass
+    : public impl::MockturtleAIGToXMGBase<MockturtleAIGToXMGPass> {
+  using impl::MockturtleAIGToXMGBase<
+      MockturtleAIGToXMGPass>::MockturtleAIGToXMGBase;
+
+  void runOnOperation() override {
+    auto module = getOperation();
+    LLVM_DEBUG(llvm::dbgs() << "Running Mockturtle AIG to XMG pass on module: "
+                            << module.getModuleName() << "\n");
+    AIGToGraphConversionOptions options;
+    options.verbose = verbose;
+    if (failed(runAIGToXMGNetworkConversion(module.getBodyBlock(), options)))
       signalPassFailure();
   }
 };
