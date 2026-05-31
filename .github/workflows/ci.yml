@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CIRCT_REF: main
+  CMAKE_BUILD_TYPE: Release
+  LLVM_ENABLE_ASSERTIONS: ON
+
+jobs:
+  build-and-test:
+    name: Release + assertions
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout plugin
+        uses: actions/checkout@v4
+        with:
+          path: plugin
+
+      - name: Checkout CIRCT
+        uses: actions/checkout@v4
+        with:
+          repository: llvm/circt
+          ref: ${{ env.CIRCT_REF }}
+          path: circt
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Mark workspaces as safe
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/plugin"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/circt"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake lld ninja-build
+
+      - name: Configure ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}-${{ env.CMAKE_BUILD_TYPE }}-assertions-${{ env.LLVM_ENABLE_ASSERTIONS }}
+          max-size: 500M
+
+      - name: Configure CIRCT
+        run: |
+          cmake -G Ninja circt/llvm/llvm -B circt-build \
+            -DCMAKE_BUILD_TYPE="$CMAKE_BUILD_TYPE" \
+            -DLLVM_ENABLE_ASSERTIONS="$LLVM_ENABLE_ASSERTIONS" \
+            -DLLVM_TARGETS_TO_BUILD=host \
+            -DLLVM_ENABLE_PROJECTS=mlir \
+            -DLLVM_EXTERNAL_PROJECTS=circt \
+            -DLLVM_EXTERNAL_CIRCT_SOURCE_DIR="$GITHUB_WORKSPACE/circt" \
+            -DLLVM_ENABLE_LLD=ON \
+            -DLLVM_ENABLE_ZSTD=OFF \
+            -DLLVM_INSTALL_UTILS=ON \
+            -DLLVM_PARALLEL_LINK_JOBS=1 \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Build CIRCT tools
+        run: cmake --build circt-build --target circt-opt FileCheck
+
+      - name: Configure plugin
+        run: |
+          cmake -G Ninja plugin -B plugin-build \
+            -DCMAKE_BUILD_TYPE="$CMAKE_BUILD_TYPE" \
+            -DCIRCT_DIR="$GITHUB_WORKSPACE/circt-build/lib/cmake/circt" \
+            -DMLIR_DIR="$GITHUB_WORKSPACE/circt-build/lib/cmake/mlir" \
+            -DLLVM_DIR="$GITHUB_WORKSPACE/circt-build/lib/cmake/llvm" \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Test plugin
+        run: cmake --build plugin-build --target check-circt-mockturtle
+
+      - name: ccache statistics
+        if: always()
+        run: ccache --show-stats
