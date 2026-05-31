@@ -193,6 +193,12 @@ NetworkExporter<Ntk, OpType>::getOrCreateNode(Value v) {
     return it->second;
 
   if (auto *defOp = v.getDefiningOp()) {
+    if (auto constant = dyn_cast<hw::ConstantOp>(defOp)) {
+      auto signal = ntk.get_constant(!constant.getValue().isZero());
+      mapValueToSignal(v, signal);
+      return signal;
+    }
+
     // Recursively visit the defining operation.
     // Only proceed if the operation is successfully converted.
     if (visit(defOp))
@@ -286,6 +292,12 @@ MixedXorNetworkExporter<Ntk, PrimaryOp>::getOrCreateNode(Value v) {
     return it->second;
 
   if (auto *defOp = v.getDefiningOp()) {
+    if (auto constant = dyn_cast<hw::ConstantOp>(defOp)) {
+      auto signal = ntk.get_constant(!constant.getValue().isZero());
+      mapValueToSignal(v, signal);
+      return signal;
+    }
+
     if (visit(defOp))
       return valueToNodeMap.at(v);
   }
