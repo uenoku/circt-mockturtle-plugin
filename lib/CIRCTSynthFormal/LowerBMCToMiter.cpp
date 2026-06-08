@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "MiterUtils.h"
-#include "Passes.h"
+#include "CIRCTSynthFormal/MiterUtils.h"
+#include "CIRCTSynthFormal/CIRCTSynthFormalPasses.h"
 #include "circt/Dialect/Comb/CombDialect.h"
 #include "circt/Dialect/Comb/CombOps.h"
 #include "circt/Dialect/HW/HWDialect.h"
@@ -30,7 +30,7 @@ static constexpr StringLiteral kBmcRecurrenceAttrName = "fraig_lec.recurrence";
 namespace circt {
 namespace fraig_lec {
 #define GEN_PASS_DEF_LOWERBMCTOMITER
-#include "Passes.h.inc"
+#include "CIRCTSynthFormal/CIRCTSynthFormalPasses.h.inc"
 } // namespace fraig_lec
 } // namespace circt
 

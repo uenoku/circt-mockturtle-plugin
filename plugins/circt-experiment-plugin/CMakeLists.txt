@@ -1,6 +1,6 @@
-add_llvm_library(CIRCTMockturtlePlugin
+add_llvm_library(CIRCTExperimentPlugin
   MODULE BUILDTREE_ONLY
-  circt-mockturtle-plugin.cpp
+  circt-experiment-plugin.cpp
 
   DEPENDS
   CIRCTMockturtle
@@ -11,7 +11,7 @@ add_llvm_library(CIRCTMockturtlePlugin
   CIRCTMockturtle
 )
 
-target_include_directories(CIRCTMockturtlePlugin
+target_include_directories(CIRCTExperimentPlugin
   PRIVATE
   "${CIRCT_EXPERIMENT_BINARY_DIR}/include"
 )

@@ -1,4 +1,4 @@
-//===- circt-mockturtle-translate.cpp - Translation Driver ----------------===//
+//===----------------------------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "CIRCTMockturtle/CIRCTMockturtleTranslations.h"
+#include "CIRCTSynthFormal/CIRCTSynthFormalTranslations.h"
 #include "circt/Support/Version.h"
 #include "mlir/Support/LogicalResult.h"
 #include "mlir/Tools/mlir-translate/MlirTranslateMain.h"
@@ -17,8 +18,9 @@
 int main(int argc, char **argv) {
   llvm::setBugReportMsg(circt::circtBugReportMsg);
   circt::mockturtle_plugin::registerTranslations();
+  circt::synth_formal::registerTranslations();
   llvm::cl::AddExtraVersionPrinter(
       [](llvm::raw_ostream &os) { os << circt::getCirctVersion() << '\n'; });
   return mlir::failed(mlir::mlirTranslateMain(
-      argc, argv, "CIRCT mockturtle translation driver"));
+      argc, argv, "CIRCT experiment translation driver"));
 }

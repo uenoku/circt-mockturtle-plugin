@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "MiterUtils.h"
-#include "Passes.h"
+#include "CIRCTSynthFormal/MiterUtils.h"
+#include "CIRCTSynthFormal/CIRCTSynthFormalPasses.h"
 #include "circt/Dialect/Comb/CombDialect.h"
 #include "circt/Dialect/HW/HWDialect.h"
 #include "circt/Dialect/HW/HWOps.h"
@@ -22,7 +22,7 @@ using namespace circt::fraig_lec;
 namespace circt {
 namespace fraig_lec {
 #define GEN_PASS_DEF_INLINEINSTANCELAYER
-#include "Passes.h.inc"
+#include "CIRCTSynthFormal/CIRCTSynthFormalPasses.h.inc"
 } // namespace fraig_lec
 } // namespace circt
 

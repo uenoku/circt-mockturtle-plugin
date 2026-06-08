@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "BMCPDR.h"
-#include "Passes.h"
+#include "CIRCTSynthFormal/BMCPDR.h"
+#include "CIRCTSynthFormal/CIRCTSynthFormalPasses.h"
 #include "circt/Conversion/CombToSynth.h"
 #include "circt/Dialect/Comb/CombOps.h"
 #include "circt/Dialect/HW/HWOps.h"

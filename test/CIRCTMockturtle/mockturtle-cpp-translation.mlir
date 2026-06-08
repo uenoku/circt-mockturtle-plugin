@@ -1,5 +1,5 @@
-// RUN: circt-mockturtle-translate --mockturtle-mlir-to-cpp %s | FileCheck %s
-// RUN: rm -rf %t && circt-mockturtle-translate --mockturtle-mlir-to-cpp --mockturtle-repro-dir=%t %s | FileCheck %s --check-prefix=REPRO-MSG
+// RUN: circt-experiment-translate --mockturtle-mlir-to-cpp %s | FileCheck %s
+// RUN: rm -rf %t && circt-experiment-translate --mockturtle-mlir-to-cpp --mockturtle-repro-dir=%t %s | FileCheck %s --check-prefix=REPRO-MSG
 // RUN: FileCheck %s --check-prefix=CPP --input-file=%t/repro.cpp
 // RUN: FileCheck %s --check-prefix=CMAKE --input-file=%t/CMakeLists.txt
 // RUN: FileCheck %s --check-prefix=README --input-file=%t/README.md

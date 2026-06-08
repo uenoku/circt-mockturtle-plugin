@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "BTOR2Importer.h"
+#include "CIRCTSynthFormal/BTOR2Importer.h"
 #include "circt/Dialect/Comb/CombOps.h"
 #include "circt/Dialect/HW/HWOps.h"
 #include "circt/Dialect/Seq/SeqOps.h"

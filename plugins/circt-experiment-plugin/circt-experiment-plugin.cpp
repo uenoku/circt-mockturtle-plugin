@@ -13,6 +13,6 @@
 
 extern "C" LLVM_ATTRIBUTE_WEAK mlir::PassPluginLibraryInfo
 mlirGetPassPluginInfo() {
-  return {MLIR_PLUGIN_API_VERSION, "CIRCTMockturtlePasses", LLVM_VERSION_STRING,
+  return {MLIR_PLUGIN_API_VERSION, "CIRCTExperimentPasses", LLVM_VERSION_STRING,
           []() { circt::mockturtle_plugin::registerPasses(); }};
 }

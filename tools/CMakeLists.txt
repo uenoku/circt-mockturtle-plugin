@@ -1,3 +1,3 @@
-add_subdirectory(circt-mockturtle-opt)
-add_subdirectory(circt-mockturtle-translate)
+add_subdirectory(circt-experiment-opt)
+add_subdirectory(circt-experiment-translate)
 add_subdirectory(circt-synth-formal)

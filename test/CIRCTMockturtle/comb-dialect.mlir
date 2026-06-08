@@ -1,4 +1,4 @@
-// RUN: circt-mockturtle-opt %s --synth-mockturtle-aig-stats | FileCheck %s
+// RUN: circt-experiment-opt %s --synth-mockturtle-aig-stats | FileCheck %s
 
 // CHECK-LABEL: hw.module @comb_extract
 // CHECK-SAME: mockturtle.aig_gates = 1

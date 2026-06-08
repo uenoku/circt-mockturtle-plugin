@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef CIRCT_FRAIG_LEC_PASSES_TD
-#define CIRCT_FRAIG_LEC_PASSES_TD
+#ifndef CIRCT_SYNTHFORMAL_PASSES_TD
+#define CIRCT_SYNTHFORMAL_PASSES_TD
 
 include "mlir/Pass/PassBase.td"
 include "mlir/Rewrite/PassUtil.td"
@@ -96,4 +96,4 @@ def ResolveChoices : Pass<"fraig-lec-resolve-choices", "::mlir::ModuleOp"> {
   let dependentDialects = ["circt::synth::SynthDialect"];
 }
 
-#endif // CIRCT_FRAIG_LEC_PASSES_TD
+#endif // CIRCT_SYNTHFORMAL_PASSES_TD

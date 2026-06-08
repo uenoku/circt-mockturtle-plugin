@@ -1,7 +1,7 @@
-// RUN: circt-mockturtle-opt %s --pass-pipeline='builtin.module(hw.module(synth-mockturtle-aig-resubstitution{max-pis=6 max-divisors=64 max-inserts=1 preserve-depth=true}))' | FileCheck %s --check-prefix=AIG
-// RUN: circt-mockturtle-opt %s --pass-pipeline='builtin.module(hw.module(synth-mockturtle-mig-resubstitution2{max-pis=6 max-divisors=64 max-inserts=1 use-dont-cares=false window-size=8}))' | FileCheck %s --check-prefix=MIG
-// RUN: circt-mockturtle-opt %s --pass-pipeline='builtin.module(hw.module(synth-mockturtle-xag-resubstitution{max-pis=6 max-divisors=64 max-inserts=1}))' | FileCheck %s --check-prefix=XAG
-// RUN: circt-mockturtle-opt %s --pass-pipeline='builtin.module(hw.module(synth-mockturtle-xmg-resubstitution{max-pis=6 max-divisors=64 max-inserts=1}))' | FileCheck %s --check-prefix=XMG
+// RUN: circt-experiment-opt %s --pass-pipeline='builtin.module(hw.module(synth-mockturtle-aig-resubstitution{max-pis=6 max-divisors=64 max-inserts=1 preserve-depth=true}))' | FileCheck %s --check-prefix=AIG
+// RUN: circt-experiment-opt %s --pass-pipeline='builtin.module(hw.module(synth-mockturtle-mig-resubstitution2{max-pis=6 max-divisors=64 max-inserts=1 use-dont-cares=false window-size=8}))' | FileCheck %s --check-prefix=MIG
+// RUN: circt-experiment-opt %s --pass-pipeline='builtin.module(hw.module(synth-mockturtle-xag-resubstitution{max-pis=6 max-divisors=64 max-inserts=1}))' | FileCheck %s --check-prefix=XAG
+// RUN: circt-experiment-opt %s --pass-pipeline='builtin.module(hw.module(synth-mockturtle-xmg-resubstitution{max-pis=6 max-divisors=64 max-inserts=1}))' | FileCheck %s --check-prefix=XMG
 // UNSUPPORTED: no-circt-experiment-plugin
 
 // AIG-LABEL: hw.module @aig_const

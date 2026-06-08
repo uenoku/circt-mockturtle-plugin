@@ -3,9 +3,11 @@
 This is an out-of-tree CIRCT project for experimental passes and tools.
 It builds:
 
-* `circt-mockturtle-opt`, a standalone optimizer driver.
-* `CIRCTMockturtlePlugin.so`, a pass plugin loadable by `circt-opt`.
+* `circt-experiment-opt`, a standalone optimizer driver.
+* `circt-experiment-translate`, a translation driver.
+* `CIRCTExperimentPlugin.so`, a pass plugin loadable by `circt-opt`.
 * `CIRCTMockturtle`, a small pass library that depends on mockturtle.
+* `CIRCTSynthFormal`, a formal verification pass library.
 * `circt-fraig-lec`, a formal equivalence and bounded-model-checking tool
   imported from `tools/circt-synth-formal/`.
 
@@ -63,13 +65,13 @@ ninja -C build check-circt-experiment
 Use the driver directly:
 
 ```sh
-build/bin/circt-mockturtle-opt input.mlir --synth-mockturtle-aig-stats
+build/bin/circt-experiment-opt input.mlir --synth-mockturtle-aig-stats
 ```
 
 Or load the plugin into `circt-opt`:
 
 ```sh
 circt-opt input.mlir \
-  --load-pass-plugin=build/lib/CIRCTMockturtlePlugin.so \
+  --load-pass-plugin=build/lib/CIRCTExperimentPlugin.so \
   --pass-pipeline='builtin.module(hw.module(synth-mockturtle-aig-stats))'
 ```

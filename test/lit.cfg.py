@@ -21,8 +21,8 @@ tool_dirs = [
     config.llvm_tools_dir,
 ]
 tools = [
-    "circt-mockturtle-opt",
-    "circt-mockturtle-translate",
+    "circt-experiment-opt",
+    "circt-experiment-translate",
     "circt-fraig-lec",
     "circt-opt",
     "FileCheck",

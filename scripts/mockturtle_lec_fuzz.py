@@ -92,7 +92,7 @@ def find_path(user_value: str | None, env_var: str, defaults: Iterable[Path],
 def find_opt_command(args: argparse.Namespace) -> list[str]:
     root = repo_root()
     plugin = find_path(args.pass_plugin, "CIRCT_EXPERIMENT_PASS_PLUGIN",
-                       [root / "build/lib/CIRCTMockturtlePlugin.so"],
+                       [root / "build/lib/CIRCTExperimentPlugin.so"],
                        "mockturtle pass plugin", "--pass-plugin")
 
     if plugin and not args.opt:
@@ -102,8 +102,8 @@ def find_opt_command(args: argparse.Namespace) -> list[str]:
         return [circt_opt, f"--load-pass-plugin={plugin}"]
 
     opt = find_tool(args.opt, "CIRCT_EXPERIMENT_OPT",
-                    default_tool("build", "bin", "circt-mockturtle-opt"),
-                    "circt-mockturtle-opt", "--circt-experiment-opt")
+                    default_tool("build", "bin", "circt-experiment-opt"),
+                    "circt-experiment-opt", "--circt-experiment-opt")
     return [opt]
 
 

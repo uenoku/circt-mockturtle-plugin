@@ -33,5 +33,5 @@ int main(int argc, char **argv) {
       [](llvm::raw_ostream &os) { os << circt::getCirctVersion() << '\n'; });
 
   return mlir::failed(mlir::MlirOptMain(
-      argc, argv, "CIRCT mockturtle optimizer driver", registry));
+      argc, argv, "CIRCT experiment optimizer driver", registry));
 }

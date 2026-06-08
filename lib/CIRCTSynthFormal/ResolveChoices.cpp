@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "Passes.h"
+#include "CIRCTSynthFormal/CIRCTSynthFormalPasses.h"
 #include "circt/Dialect/Synth/SynthDialect.h"
 #include "circt/Dialect/Synth/SynthOps.h"
 
@@ -17,7 +17,7 @@ using namespace circt::fraig_lec;
 namespace circt {
 namespace fraig_lec {
 #define GEN_PASS_DEF_RESOLVECHOICES
-#include "Passes.h.inc"
+#include "CIRCTSynthFormal/CIRCTSynthFormalPasses.h.inc"
 } // namespace fraig_lec
 } // namespace circt
 
