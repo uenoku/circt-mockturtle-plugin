@@ -8,6 +8,7 @@ config.circt_experiment_has_plugin = @CIRCT_EXPERIMENT_HAS_PLUGIN@
 config.circt_tools_dir = lit_config.substitute("@CIRCT_TOOLS_DIR@")
 config.llvm_tools_dir = lit_config.substitute("@LLVM_TOOLS_DIR@")
 config.llvm_shlib_ext = "@SHLIBEXT@"
+config.circt_fraig_scripts_dir = "@CIRCT_EXPERIMENT_SOURCE_DIR@/circt-synth-formal-exp/scripts"
 
 import lit.llvm
 lit.llvm.initialize(lit_config, config)

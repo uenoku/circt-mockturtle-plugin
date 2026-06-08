@@ -23,7 +23,4 @@ add_lit_testsuite(check-circt-experiment
 )
 set_target_properties(check-circt-experiment PROPERTIES FOLDER "Tests")
 
-# Run formal tool tests as part of the main experiment test suite.
-if(TARGET check-circt-fraig-lec)
-  add_dependencies(check-circt-experiment check-circt-fraig-lec)
-endif()
+

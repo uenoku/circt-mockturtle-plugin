@@ -3,7 +3,7 @@
 # RUN: touch %t.dir/benches/cex.btor2 %t.dir/benches/proven.btor2 %t.dir/benches/timeout.btor2 %t.dir/benches/unsupported.btor2
 # RUN: printf '#!/usr/bin/env bash\nfile="${@: -1}"\ncase "$file" in\n*timeout*) exit 124 ;;\nesac\nfor arg in "$@"; do\n  if [[ "$arg" == "--fake-extra" ]]; then\n    echo "saw fake extra"\n  fi\n  if [[ "$arg" == "--btor2-pdr-blocked-cube-limit=7" ]]; then\n    echo "saw block limit"\n  fi\n  if [[ "$arg" == "--conflict-limit=100" ]]; then\n    echo "saw conflict limit"\n  fi\ndone\ncase "$file" in\n*cex*) echo "pdr: counterexample found"; exit 1 ;;\n*proven*) echo "pdr: proven safe"; exit 0 ;;\n*unsupported*) echo "large arrays are no""t supported"; exit 1 ;;\nesac\necho "pdr: unknown within depth"; exit 0\n' > %t.tool
 # RUN: chmod +x %t.tool
-# RUN: %S/../scripts/bench-word-level-hwmc.sh --tool %t.tool --root %t.dir --set %t.dir/benches --depth 1 --timeout 1 --pdr-blocked-cube-limit 7 --conflict-limit 100 --tool-arg --fake-extra --log-dir %t.logs --summary-table --detail-table | FileCheck %s
+# RUN: %fraig_scripts/bench-word-level-hwmc.sh --tool %t.tool --root %t.dir --set %t.dir/benches --depth 1 --timeout 1 --pdr-blocked-cube-limit 7 --conflict-limit 100 --tool-arg --fake-extra --log-dir %t.logs --summary-table --detail-table | FileCheck %s
 # RUN: FileCheck %s --check-prefix=LOG < %t.logs/benches__proven.btor2.log
 
 # CHECK: summary:
