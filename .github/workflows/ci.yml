@@ -60,6 +60,7 @@ jobs:
             -DLLVM_ENABLE_ZSTD=OFF \
             -DLLVM_INSTALL_UTILS=ON \
             -DLLVM_PARALLEL_LINK_JOBS=1 \
+            -DCIRCT_CADICAL_ENABLED=ON \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
