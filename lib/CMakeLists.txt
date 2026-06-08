@@ -1,2 +1,3 @@
 add_subdirectory(CIRCTMockturtle)
 add_subdirectory(CIRCTSynthFormal)
+add_subdirectory(CIRCTQuery)

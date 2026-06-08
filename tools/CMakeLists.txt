@@ -1,3 +1,5 @@
 add_subdirectory(circt-experiment-opt)
 add_subdirectory(circt-experiment-translate)
 add_subdirectory(circt-synth-formal)
+add_subdirectory(circt-query)
+add_subdirectory(circt-mcp)
