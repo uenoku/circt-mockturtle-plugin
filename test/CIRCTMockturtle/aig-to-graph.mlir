@@ -1,7 +1,7 @@
 // RUN: circt-mockturtle-opt %s --pass-pipeline='builtin.module(hw.module(synth-mockturtle-aig-to-xag{verbose=false}))' | FileCheck %s --check-prefix=XAG
 // RUN: circt-mockturtle-opt %s --pass-pipeline='builtin.module(hw.module(synth-mockturtle-aig-to-mig{use-multiple=true verbose=false}))' | FileCheck %s --check-prefix=MIG
 // RUN: circt-mockturtle-opt %s --pass-pipeline='builtin.module(hw.module(synth-mockturtle-aig-to-xmg{verbose=false}))' | FileCheck %s --check-prefix=XMG
-// UNSUPPORTED: no-circt-mockturtle-plugin
+// UNSUPPORTED: no-circt-experiment-plugin
 
 // XAG-LABEL: hw.module @aig_to_graph
 // XAG: synth.aig.and_inv

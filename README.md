@@ -1,11 +1,13 @@
-# CIRCT Mockturtle Plugin
+# CIRCT Experiment
 
-This is an out-of-tree CIRCT project based on `examples/circt-standalone`.
+This is an out-of-tree CIRCT project for experimental passes and tools.
 It builds:
 
 * `circt-mockturtle-opt`, a standalone optimizer driver.
 * `CIRCTMockturtlePlugin.so`, a pass plugin loadable by `circt-opt`.
 * `CIRCTMockturtle`, a small pass library that depends on mockturtle.
+
+Tools live under `tools/` and plugins live under `plugins/`.
 
 This repository pins the CIRCT version as the `circt` git submodule. Clone with
 submodules, or initialize them after cloning:

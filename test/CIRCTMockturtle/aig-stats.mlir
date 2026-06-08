@@ -1,7 +1,7 @@
 // RUN: circt-mockturtle-opt %s --synth-mockturtle-aig-stats | FileCheck %s
 // RUN: circt-mockturtle-opt %s --synth-structural-hash | FileCheck %s --check-prefix=STRUCTURAL-HASH
 // RUN: circt-opt %s --load-pass-plugin=%plugin --pass-pipeline='builtin.module(hw.module(synth-mockturtle-aig-stats))' | FileCheck %s
-// UNSUPPORTED: no-circt-mockturtle-plugin
+// UNSUPPORTED: no-circt-experiment-plugin
 
 // CHECK-LABEL: hw.module @simple
 // CHECK-SAME: mockturtle.aig_gates = 2

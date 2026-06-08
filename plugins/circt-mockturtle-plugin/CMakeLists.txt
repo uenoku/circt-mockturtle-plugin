@@ -13,5 +13,5 @@ add_llvm_library(CIRCTMockturtlePlugin
 
 target_include_directories(CIRCTMockturtlePlugin
   PRIVATE
-  "${CIRCT_MOCKTURTLE_BINARY_DIR}/include"
+  "${CIRCT_EXPERIMENT_BINARY_DIR}/include"
 )

@@ -1,10 +1,10 @@
 @LIT_SITE_CFG_IN_HEADER@
 
-config.circt_mockturtle_src_root = "@CIRCT_MOCKTURTLE_SOURCE_DIR@"
-config.circt_mockturtle_obj_root = "@CIRCT_MOCKTURTLE_BINARY_DIR@"
-config.circt_mockturtle_tools_dir = "@LLVM_RUNTIME_OUTPUT_INTDIR@"
-config.circt_mockturtle_plugin = "@LLVM_LIBRARY_OUTPUT_INTDIR@/CIRCTMockturtlePlugin@SHLIBEXT@"
-config.circt_mockturtle_has_plugin = @CIRCT_MOCKTURTLE_HAS_PLUGIN@
+config.circt_experiment_src_root = "@CIRCT_EXPERIMENT_SOURCE_DIR@"
+config.circt_experiment_obj_root = "@CIRCT_EXPERIMENT_BINARY_DIR@"
+config.circt_experiment_tools_dir = "@LLVM_RUNTIME_OUTPUT_INTDIR@"
+config.circt_experiment_plugin = "@LLVM_LIBRARY_OUTPUT_INTDIR@/CIRCTMockturtlePlugin@SHLIBEXT@"
+config.circt_experiment_has_plugin = @CIRCT_EXPERIMENT_HAS_PLUGIN@
 config.circt_tools_dir = lit_config.substitute("@CIRCT_TOOLS_DIR@")
 config.llvm_tools_dir = lit_config.substitute("@LLVM_TOOLS_DIR@")
 config.llvm_shlib_ext = "@SHLIBEXT@"

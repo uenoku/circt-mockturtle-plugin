@@ -5,19 +5,19 @@ configure_lit_site_cfg(
   ${CMAKE_CURRENT_SOURCE_DIR}/lit.cfg.py
 )
 
-set(CIRCT_MOCKTURTLE_TEST_DEPENDS
+set(CIRCT_EXPERIMENT_TEST_DEPENDS
   circt-mockturtle-opt
   circt-mockturtle-translate
 )
 
-if(CIRCT_MOCKTURTLE_HAS_PLUGIN)
-  list(APPEND CIRCT_MOCKTURTLE_TEST_DEPENDS CIRCTMockturtlePlugin circt-opt)
+if(CIRCT_EXPERIMENT_HAS_PLUGIN)
+  list(APPEND CIRCT_EXPERIMENT_TEST_DEPENDS CIRCTMockturtlePlugin circt-opt)
 endif()
 
-add_lit_testsuite(check-circt-mockturtle
-  "Running the CIRCT mockturtle plugin regression tests"
+add_lit_testsuite(check-circt-experiment
+  "Running the CIRCT experiment regression tests"
   ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS
-  ${CIRCT_MOCKTURTLE_TEST_DEPENDS}
+  ${CIRCT_EXPERIMENT_TEST_DEPENDS}
 )
-set_target_properties(check-circt-mockturtle PROPERTIES FOLDER "Tests")
+set_target_properties(check-circt-experiment PROPERTIES FOLDER "Tests")

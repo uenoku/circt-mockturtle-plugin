@@ -7,7 +7,7 @@ add_mlir_library(CIRCTMockturtle
   Bindings/Bind.cpp
 
   ADDITIONAL_HEADER_DIRS
-  ${CIRCT_MOCKTURTLE_SOURCE_DIR}/include/CIRCTMockturtle
+  ${CIRCT_EXPERIMENT_SOURCE_DIR}/include/CIRCTMockturtle
 
   DEPENDS
   CIRCTMockturtlePassesIncGen

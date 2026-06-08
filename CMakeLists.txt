@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20.0)
-project(circt-mockturtle-plugin LANGUAGES CXX C)
+project(circt-experiment LANGUAGES CXX C)
 
 set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR ON)
 
@@ -28,8 +28,8 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   include(HandleLLVMOptions)
 endif()
 
-set(CIRCT_MOCKTURTLE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(CIRCT_MOCKTURTLE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+set(CIRCT_EXPERIMENT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(CIRCT_EXPERIMENT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
@@ -115,26 +115,20 @@ include_directories(${LLVM_MAIN_SRC_DIR}/../mlir/include)
 include_directories(${CMAKE_BINARY_DIR}/tools/mlir/include)
 include_directories(${CIRCT_INCLUDE_DIRS})
 include_directories(${LLVM_EXTERNAL_CIRCT_SOURCE_DIR}/include)
-include_directories(${CIRCT_MOCKTURTLE_SOURCE_DIR}/include)
-include_directories(${CIRCT_MOCKTURTLE_BINARY_DIR}/include)
+include_directories(${CIRCT_EXPERIMENT_SOURCE_DIR}/include)
+include_directories(${CIRCT_EXPERIMENT_BINARY_DIR}/include)
 link_directories(${LLVM_BUILD_LIBRARY_DIR})
 link_directories(${CIRCT_LIBRARY_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-option(CIRCT_MOCKTURTLE_INCLUDE_TESTS
-  "Generate build targets for the CIRCT mockturtle plugin tests." ON)
+option(CIRCT_EXPERIMENT_INCLUDE_TESTS
+  "Generate build targets for the CIRCT experiment tests." ON)
 
 add_subdirectory(include)
 add_subdirectory(lib)
-add_subdirectory(circt-mockturtle-opt)
-add_subdirectory(circt-mockturtle-translate)
+add_subdirectory(tools)
+add_subdirectory(plugins)
 
-set(CIRCT_MOCKTURTLE_HAS_PLUGIN 0)
-if(NOT WIN32 AND NOT EMSCRIPTEN AND TARGET circt-opt)
-  add_subdirectory(circt-mockturtle-plugin)
-  set(CIRCT_MOCKTURTLE_HAS_PLUGIN 1)
-endif()
-
-if(CIRCT_MOCKTURTLE_INCLUDE_TESTS)
+if(CIRCT_EXPERIMENT_INCLUDE_TESTS)
   add_subdirectory(test)
 endif()

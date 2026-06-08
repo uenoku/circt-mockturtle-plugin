@@ -1,0 +1,5 @@
+set(CIRCT_EXPERIMENT_HAS_PLUGIN 0 PARENT_SCOPE)
+if(NOT WIN32 AND NOT EMSCRIPTEN AND TARGET circt-opt)
+  add_subdirectory(circt-mockturtle-plugin)
+  set(CIRCT_EXPERIMENT_HAS_PLUGIN 1 PARENT_SCOPE)
+endif()

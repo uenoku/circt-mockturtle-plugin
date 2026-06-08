@@ -15,7 +15,7 @@
 // RUN: circt-mockturtle-opt %s --pass-pipeline='builtin.module(hw.module(synth-mockturtle-xmg-resubstitution{max-pis=8 max-divisors=16 max-inserts=1 skip-fanout-limit-for-roots=32 skip-fanout-limit-for-divisors=16 use-dont-cares=false preserve-depth=false max-clauses=64 conflict-limit=64 random-seed=1 odc-levels=0 max-trials=8 max-divisors-k=8 progress=false verbose=false}))' | FileCheck %s --check-prefix=XMG
 // RUN: circt-mockturtle-opt %s --pass-pipeline='builtin.module(hw.module(synth-mockturtle-xmg-algebraic-rewrite-depth{strategy=dfs overhead=1.5 allow-area-increase=true}))' | FileCheck %s --check-prefix=XMG
 // RUN: circt-opt %s --load-pass-plugin=%plugin --pass-pipeline='builtin.module(hw.module(synth-mockturtle-aig-balancing{minimize-levels=true fast-mode=true}))' | FileCheck %s --check-prefix=AIG
-// UNSUPPORTED: no-circt-mockturtle-plugin
+// UNSUPPORTED: no-circt-experiment-plugin
 
 // AIG-LABEL: hw.module @aig
 // AIG: synth.aig.and_inv

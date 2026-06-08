@@ -91,7 +91,7 @@ def find_path(user_value: str | None, env_var: str, defaults: Iterable[Path],
 
 def find_opt_command(args: argparse.Namespace) -> list[str]:
     root = repo_root()
-    plugin = find_path(args.pass_plugin, "CIRCT_MOCKTURTLE_PASS_PLUGIN",
+    plugin = find_path(args.pass_plugin, "CIRCT_EXPERIMENT_PASS_PLUGIN",
                        [root / "build/lib/CIRCTMockturtlePlugin.so"],
                        "mockturtle pass plugin", "--pass-plugin")
 
@@ -101,9 +101,9 @@ def find_opt_command(args: argparse.Namespace) -> list[str]:
                               "--circt-opt")
         return [circt_opt, f"--load-pass-plugin={plugin}"]
 
-    opt = find_tool(args.opt, "CIRCT_MOCKTURTLE_OPT",
+    opt = find_tool(args.opt, "CIRCT_EXPERIMENT_OPT",
                     default_tool("build", "bin", "circt-mockturtle-opt"),
-                    "circt-mockturtle-opt", "--circt-mockturtle-opt")
+                    "circt-mockturtle-opt", "--circt-experiment-opt")
     return [opt]
 
 
@@ -201,7 +201,7 @@ def main() -> int:
     parser.add_argument("--circt-opt", dest="circt_opt")
     parser.add_argument("--pass-plugin",
                         help="Mockturtle pass plugin for use with circt-opt")
-    parser.add_argument("--circt-mockturtle-opt", dest="opt")
+    parser.add_argument("--circt-experiment-opt", dest="opt")
     parser.add_argument("--circt-lec", dest="lec")
     parser.add_argument("--timeout", type=float, default=120.0)
     parser.add_argument("--pass", dest="passes", action="append",
