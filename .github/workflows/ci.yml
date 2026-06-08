@@ -66,7 +66,7 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Build CIRCT tools
-        run: cmake --build circt-build --target circt-opt FileCheck count
+        run: cmake --build circt-build --target circt-opt FileCheck count not
 
       - name: Configure plugin
         run: |
