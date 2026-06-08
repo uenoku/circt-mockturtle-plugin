@@ -133,7 +133,7 @@ if(CIRCT_EXPERIMENT_INCLUDE_TESTS)
   add_subdirectory(test)
 endif()
 
-# Import circt-synth-formal-exp as a subproject.
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/circt-synth-formal-exp/CMakeLists.txt")
-  add_subdirectory(circt-synth-formal-exp)
+# Import circt-synth-formal as a subproject.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/circt-synth-formal/CMakeLists.txt")
+  add_subdirectory(circt-synth-formal)
 endif()

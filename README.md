@@ -6,8 +6,11 @@ It builds:
 * `circt-mockturtle-opt`, a standalone optimizer driver.
 * `CIRCTMockturtlePlugin.so`, a pass plugin loadable by `circt-opt`.
 * `CIRCTMockturtle`, a small pass library that depends on mockturtle.
+* `circt-fraig-lec`, a formal equivalence and bounded-model-checking tool
+  imported from `circt-synth-formal/`.
 
 Tools live under `tools/` and plugins live under `plugins/`.
+Formal verification code lives under `circt-synth-formal/`.
 
 This repository pins the CIRCT version as the `circt` git submodule. Clone with
 submodules, or initialize them after cloning:
@@ -54,7 +57,7 @@ Set `MOCKTURTLE_GIT_TAG` to build against a different upstream revision.
 Build and test:
 
 ```sh
-ninja -C build check-circt-mockturtle
+ninja -C build check-circt-experiment
 ```
 
 Use the driver directly:
