@@ -1,0 +1,13 @@
+; RUN: circt-fraig-lec --input-format=btor2 --btor2-bound=1 --emit-imported %s | FileCheck %s
+
+1 sort bitvec 1
+2 input 1 a
+3 not 1 2
+4 bad 3
+5 output 2 a_out
+
+; CHECK: verif.bmc bound 1 num_regs 0 initial_values []
+; CHECK-SAME: fraig_lec.input_names = ["a"]
+; CHECK: circuit {
+; CHECK: ^bb0(%{{.*}}: i1):
+; CHECK: verif.assert {{.*}} label "bad_4" : i1

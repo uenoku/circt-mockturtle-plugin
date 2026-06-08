@@ -1,0 +1,22 @@
+; RUN: not circt-fraig-lec --btor2-pdr-depth=3 %s 2>&1 | FileCheck %s
+; RUN: not circt-fraig-lec --btor2-pdr-depth=3 --btor2-pdr-precheck-depth=1 %s 2>&1 | FileCheck %s --check-prefix=PDR
+
+1 sort bitvec 1
+2 zero 1
+3 state 1 s
+4 init 1 3 2
+5 input 1 i
+6 next 1 3 5
+7 bad 3
+
+; CHECK: pdr: counterexample found by BMC at depth 1
+; CHECK: pdr: counterexample trace:
+; CHECK: pdr:   state 0: s=0
+; CHECK: pdr:   input 0: i=1
+; CHECK: pdr:   state 1: s=1
+
+; PDR: pdr: counterexample found at depth 1
+; PDR: pdr: counterexample trace:
+; PDR: pdr:   state 0: s=0
+; PDR: pdr:   input 0: i=1
+; PDR: pdr:   state 1: s=1

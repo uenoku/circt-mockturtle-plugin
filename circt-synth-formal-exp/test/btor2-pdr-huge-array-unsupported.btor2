@@ -1,0 +1,12 @@
+; RUN: not circt-fraig-lec --btor2-pdr-depth=1 %s 2>&1 | FileCheck %s
+
+1 sort bitvec 1
+2 sort bitvec 22
+3 sort bitvec 8
+4 sort array 2 3
+5 zero 1
+6 state 4 mem
+7 next 4 6 6
+8 bad 5
+
+; CHECK: large arrays are not supported by this prototype PDR flow

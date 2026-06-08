@@ -1,0 +1,14 @@
+; RUN: circt-fraig-lec --input-format=btor2 --btor2-bound=1 --emit-imported %s | FileCheck %s
+
+1 sort bitvec 1
+2 sort bitvec 2
+3 sort bitvec 8
+4 sort array 2 3
+5 input 4 lhs
+6 input 4 rhs
+7 eq 1 5 6
+8 not 1 7
+9 bad 8
+
+; CHECK: hw.bitcast
+; CHECK: comb.icmp eq

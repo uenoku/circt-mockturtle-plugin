@@ -1,0 +1,99 @@
+diff --git a/include/circt/Support/SATSolver.h b/include/circt/Support/SATSolver.h
+index acd3758e4..777b71ffc 100644
+--- a/include/circt/Support/SATSolver.h
++++ b/include/circt/Support/SATSolver.h
+@@ -176,6 +176,11 @@ public:
+   /// Return the satisfying assignment for variable `v` from the last SAT
+   /// result. The sign of the returned literal encodes the Boolean value.
+   virtual int val(int v) const = 0;
++  /// Return whether the backend can report failed assumptions after UNSAT.
++  virtual bool hasFailedAssumptions() const { return false; }
++  /// Return whether `lit` was part of the failed assumptions for the last
++  /// UNSAT solve. Backends that do not support failed assumptions return false.
++  virtual bool failedAssumption(int lit) const { return false; }
+ 
+   // These helpers are not part of the standard IPASIR interface.
+   /// Set the per-`solve()` conflict budget. Negative values restore the
+diff --git a/lib/Conversion/CombToSynth/CombToSynth.cpp b/lib/Conversion/CombToSynth/CombToSynth.cpp
+index 55c5ccb1e..795427d79 100644
+--- a/lib/Conversion/CombToSynth/CombToSynth.cpp
++++ b/lib/Conversion/CombToSynth/CombToSynth.cpp
+@@ -938,6 +938,18 @@ struct CombMulOpConversion : OpConversionPattern<MulOp> {
+       return success();
+     }
+ 
++    if (partialProducts.size() <= 2) {
++      SmallVector<Value> addends;
++      addends.reserve(partialProducts.size());
++      for (auto &row : partialProducts) {
++        SmallVector<Value> bits(llvm::reverse(row));
++        addends.push_back(comb::ConcatOp::create(rewriter, loc, bits));
++      }
++      auto newAdd = comb::AddOp::create(rewriter, loc, addends, true);
++      replaceOpAndCopyNamehint(rewriter, op, newAdd);
++      return success();
++    }
++
+     // Wallace tree reduction - reduce to two addends.
+     datapath::CompressorTree comp(width, partialProducts, loc);
+     auto addends = comp.compressToHeight(rewriter, 2);
+diff --git a/lib/Support/SATSolver.cpp b/lib/Support/SATSolver.cpp
+index 20a3a6892..db1255a28 100644
+--- a/lib/Support/SATSolver.cpp
++++ b/lib/Support/SATSolver.cpp
+@@ -81,6 +81,8 @@ public:
+       return 0;
+     return solver.val(v);
+   }
++  bool hasFailedAssumptions() const override { return true; }
++  bool failedAssumption(int lit) const override { return solver.failed(lit); }
+   void setConflictLimit(int limit) override { conflictLimit = limit; }
+   void reserveVars(int maxVar) override {
+     if (maxVar <= maxVariable)
+diff --git a/llvm b/llvm
+index fb8243f32..e6566c571 160000
+--- a/llvm
++++ b/llvm
+@@ -1 +1 @@
+-Subproject commit fb8243f32c955690ebdfdd32eb9aaaf0c391b648
++Subproject commit e6566c571aead7b48bdf13a8c170515abaeea74e-dirty
+diff --git a/test/Conversion/CombToSynth/comb-to-aig-arith.mlir b/test/Conversion/CombToSynth/comb-to-aig-arith.mlir
+index fcd76d113..a3a10eee4 100644
+--- a/test/Conversion/CombToSynth/comb-to-aig-arith.mlir
++++ b/test/Conversion/CombToSynth/comb-to-aig-arith.mlir
+@@ -202,6 +202,13 @@ hw.module @mul_1(in %lhs: i1, in %rhs: i1, out out: i1) {
+   hw.output %0 : i1
+ }
+ 
++// CHECK-LABEL: @mul_2
++// CHECK: comb.concat
++hw.module @mul_2(in %lhs: i2, in %rhs: i2, out out: i2) {
++  %0 = comb.mul %lhs, %rhs : i2
++  hw.output %0 : i2
++}
++
+ // CHECK-LABEL: @mul_17
+ hw.module @mul_17(in %lhs: i17, in %rhs: i17, out out: i17) {
+   %0 = comb.mul %lhs, %rhs : i17
+diff --git a/unittests/Support/SATSolverTest.cpp b/unittests/Support/SATSolverTest.cpp
+index 25e72d6f8..894d8710c 100644
+--- a/unittests/Support/SATSolverTest.cpp
++++ b/unittests/Support/SATSolverTest.cpp
+@@ -198,3 +198,17 @@ TEST(SatSolverTest, CadicalConflictLimitCanBeConfigured) {
+   solver->setConflictLimit(-1);
+   EXPECT_EQ(IncrementalSATSolver::kUNSAT, solver->solve());
+ }
++
++TEST(SatSolverTest, CadicalReportsFailedAssumptions) {
++  auto solver = createCadicalSATSolver();
++  if (!solver)
++    GTEST_SKIP() << "CaDiCaL is not available in this build.";
++
++  solver->reserveVars(3);
++  solver->addClause({-1, -2});
++
++  EXPECT_TRUE(solver->hasFailedAssumptions());
++  EXPECT_EQ(IncrementalSATSolver::kUNSAT, solver->solve({1, 2, 3}));
++  EXPECT_TRUE(solver->failedAssumption(1));
++  EXPECT_TRUE(solver->failedAssumption(2));
++}

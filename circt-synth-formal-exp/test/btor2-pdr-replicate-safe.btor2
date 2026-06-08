@@ -1,0 +1,14 @@
+; RUN: circt-fraig-lec --btor2-pdr-depth=2 %s | FileCheck %s
+
+1 sort bitvec 1
+2 sort bitvec 2
+3 zero 1
+4 zero 2
+5 state 1 s
+6 init 1 5 3
+7 next 1 5 5
+8 sext 2 5 1
+9 eq 1 8 4
+10 bad -9
+
+; CHECK: pdr: proven safe

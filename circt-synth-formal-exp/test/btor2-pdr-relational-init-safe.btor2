@@ -1,0 +1,18 @@
+; RUN: circt-fraig-lec --btor2-pdr-depth=4 %s | FileCheck %s
+; RUN: not circt-fraig-lec --btor2-pdr-depth=4 --btor2-pdr-precheck-depth=1 --btor2-pdr-blocked-cube-limit=1 %s 2>&1 | FileCheck %s --check-prefix=LIMIT
+; RUN: not circt-fraig-lec --btor2-pdr-depth=4 --conflict-limit=0 %s 2>&1 | FileCheck %s --check-prefix=CONFLICT
+
+; The initial value of t is relational: t starts equal to unconstrained s.
+; Ignoring the nonconstant init expression admits a depth-0 counterexample.
+1 sort bitvec 1
+2 state 1 s
+3 state 1 t
+4 init 1 3 2
+5 next 1 2 2
+6 next 1 3 3
+7 eq 1 2 3
+8 bad -7
+
+; CHECK: pdr: proven safe
+; LIMIT: pdr: unknown within depth 1 after reaching blocked-cube limit 1
+; CONFLICT: pdr: unknown within depth 1 after SAT conflict limit 0

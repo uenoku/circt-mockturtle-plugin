@@ -1,0 +1,27 @@
+; RUN: not circt-fraig-lec --input-format=btor2 --btor2-bound=2 %s 2>&1 | FileCheck %s
+; RUN: not circt-fraig-lec --input-format=btor2 --btor2-sweep --btor2-bound=2 %s 2>&1 | FileCheck %s --check-prefix=SWEEP
+; RUN: not circt-fraig-lec --counterexample --btor2-bound=2 %s 2>&1 | FileCheck %s --check-prefix=CEX
+
+1 sort bitvec 1
+2 zero 1
+3 state 1 s
+4 init 1 3 2
+5 input 1 i
+6 next 1 3 5
+7 bad 3
+
+; CHECK: bmc_miter: not proven
+; CHECK: step 0 assertion bad_7: proven
+; CHECK: step 1 assertion bad_7: not proven
+
+; SWEEP: bound 1:
+; SWEEP: bmc_miter: safe within bound
+; SWEEP: bound 2:
+; SWEEP: bmc_miter: not proven
+; SWEEP: first failing bound: 2
+
+; CEX: bmc_miter: not proven
+; CEX: step 1 assertion bad_7: not proven
+; CEX: counterexample:
+; CEX: step0_i =
+; CEX: step1_i =

@@ -1,0 +1,22 @@
+; RUN: circt-fraig-lec --input-format=btor2 --btor2-bound=1 %s | FileCheck %s
+; RUN: circt-fraig-lec --input-format=btor2 --btor2-bound=1 --emit-imported %s | FileCheck %s --check-prefix=IMPORT
+
+1 sort bitvec 1
+2 sort bitvec 2
+3 sort bitvec 8
+4 sort array 2 3
+5 input 4 mem
+6 input 2 idx
+7 input 3 val
+8 write 4 5 6 7
+9 read 3 8 6
+10 eq 1 9 7
+11 not 1 10
+12 bad 11
+
+; CHECK: bmc_miter: safe within bound
+; CHECK: step 0 assertion bad_12: proven
+
+; IMPORT: !hw.array<4xi8>
+; IMPORT: hw.array_inject
+; IMPORT: hw.array_get

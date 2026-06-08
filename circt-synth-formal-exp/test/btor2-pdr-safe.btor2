@@ -1,0 +1,15 @@
+; RUN: circt-fraig-lec --btor2-pdr-depth=4 %s | FileCheck %s
+; RUN: circt-fraig-lec --emit-pdr-transition %s | FileCheck %s --check-prefix=TRANS
+
+1 sort bitvec 1
+2 zero 1
+3 one 1
+4 state 1 s
+5 init 1 4 2
+6 next 1 4 3
+7 bad 2
+
+; CHECK: pdr: proven safe
+
+; TRANS: hw.module @__pdr_transition(in %state_reg0 : i1, out initial : i1, out constraint : i1, out bad : i1, out next_reg0 : i1)
+; TRANS: hw.output %true{{(_[0-9]+)?}}, %true{{(_[0-9]+)?}}, %false{{(_[0-9]+)?}}, %true{{(_[0-9]+)?}} : i1, i1, i1, i1

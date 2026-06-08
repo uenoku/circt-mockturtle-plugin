@@ -1,0 +1,10 @@
+; RUN: not circt-fraig-lec --btor2-pdr-depth=4 %s 2>&1 | FileCheck %s
+
+1 sort bitvec 1
+2 one 1
+3 state 1 s
+4 init 1 3 2
+5 next 1 3 3
+6 bad 3
+
+; CHECK: pdr: counterexample found{{( by BMC)?}} at depth 0

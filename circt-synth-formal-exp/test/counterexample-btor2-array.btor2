@@ -1,0 +1,15 @@
+; RUN: not circt-fraig-lec --counterexample --btor2-bound=1 %s 2>&1 | FileCheck %s
+
+1 sort bitvec 1
+2 sort bitvec 2
+3 sort array 2 1
+4 state 3 mem
+5 input 2 idx
+6 read 1 4 5
+7 bad 6
+
+; CHECK: bmc_miter: not proven
+; CHECK: step 0 assertion bad_7: not proven
+; CHECK: counterexample:
+; CHECK: step0_idx =
+; CHECK: init_mem =

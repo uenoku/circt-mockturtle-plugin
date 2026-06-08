@@ -1,0 +1,13 @@
+; RUN: circt-fraig-lec --bmc-recurrence --btor2-bound=2 %s | FileCheck %s
+
+1 sort bitvec 1
+2 zero 1
+3 state 1 s
+4 init 1 3 2
+5 not 1 3
+6 next 1 3 5
+7 bad 2
+
+; CHECK: bmc_miter: safe within bound
+; CHECK: bmc_recurrence_miter: complete within bound
+; CHECK: loop-free path: proven

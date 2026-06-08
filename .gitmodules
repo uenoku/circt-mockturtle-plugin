@@ -1,6 +1,3 @@
 [submodule "circt"]
 	path = circt
 	url = https://github.com/llvm/circt.git
-[submodule "circt-synth-formal-exp"]
-	path = circt-synth-formal-exp
-	url = git@github.com:uenoku/circt-synth-formal-exp.git

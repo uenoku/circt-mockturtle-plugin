@@ -1,0 +1,15 @@
+; RUN: not circt-fraig-lec --btor2-pdr-depth=1 %s 2>&1 | FileCheck %s
+
+1 sort bitvec 1
+2 sort bitvec 9
+3 sort bitvec 128
+4 sort array 2 3
+5 zero 1
+6 input 2 idx
+7 zero 3
+8 state 4 mem
+9 write 4 8 6 7
+10 next 4 8 9
+11 bad 5
+
+; CHECK: PDR aggregate lowering for 'hw.array_inject' would create an intermediate wider than 16777215 bits

@@ -1,0 +1,17 @@
+; RUN: not circt-fraig-lec --btor2-pdr-depth=1 %s 2>&1 | FileCheck %s
+; RUN: not circt-fraig-lec --btor2-pdr-depth=2 --btor2-pdr-divmod-unknown-bits=18 %s 2>&1 | FileCheck %s --check-prefix=RAISED
+; RUN: not circt-fraig-lec --btor2-pdr-depth=1 --btor2-pdr-divmod-unknown-bits=32 %s 2>&1 | FileCheck %s --check-prefix=BAD-LIMIT
+
+1 sort bitvec 9
+2 sort bitvec 1
+3 state 1 s
+4 one 1
+5 init 1 3 4
+6 udiv 1 3 3
+7 next 1 3 6
+8 eq 2 3 4
+9 bad 8
+
+; CHECK: PDR transition normalization can only emulate 'comb.divu' with at most 16 unknown operand bits; this operation requires 18
+; RAISED: pdr: counterexample found by BMC
+; BAD-LIMIT: --btor2-pdr-divmod-unknown-bits must be less than 32

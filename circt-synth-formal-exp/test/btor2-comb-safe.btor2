@@ -1,0 +1,10 @@
+; RUN: circt-fraig-lec --btor2-bound=1 %s | FileCheck %s
+
+1 sort bitvec 1
+2 input 1 a
+3 not 1 2
+4 constraint 2
+5 bad 3
+
+; CHECK: bmc_miter: safe within bound
+; CHECK: step 0 assertion bad_5: proven
