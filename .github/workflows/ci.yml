@@ -81,7 +81,7 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Test plugin
-        run: cmake --build plugin-build --target check-circt-mockturtle
+        run: cmake --build plugin-build --target check-circt-experiment
 
       - name: ccache statistics
         if: always()
