@@ -1,0 +1,5 @@
+1 sort bitvec 1
+2 input 1 a
+3 not 1 2
+4 bad 3
+5 output 2 a_out

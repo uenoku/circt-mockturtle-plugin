@@ -15,6 +15,7 @@ target_link_libraries(circt-experiment-translate
   CIRCTComb
   CIRCTHW
   CIRCTSynth
+  CIRCTVerif
   MLIRIR
   MLIRParser
   MLIRSupport
